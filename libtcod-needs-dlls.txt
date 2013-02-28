@@ -1,0 +1,10 @@
+To actually run the application, you will need to provide the appropriate
+libTCOD DLLs or SOs for your system -- they must be in the directory you launch
+rl.py from (so, the same directory as rl.py).
+
+These instructions are correct for libTCOD v1.5.1:
+
+On Windows, you will want libtcod-mingw.dll and SDL.dll.
+
+On Linux, you will want libtcod.so and possibly SDLlib.so (however, the latter
+may be provided/provideable by your package manager instead).
