@@ -3,6 +3,7 @@
 from modules import libtcodpy as libtcod
 from modules.randomlife.entities import Entity
 from modules.randomlife.tiles import Tile
+from modules.randomlife.dungeon import Room, carve_h_tunnel, carve_v_tunnel
 
 LIMIT_FPS = 20
 
@@ -35,7 +36,18 @@ def handle_keys(player):
 def make_map():
     global MAP_HEIGHT, MAP_WIDTH
 
-    map = [[Tile(True) for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
+    map = [[Tile(False) for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
+
+    rooms = [
+        Room(map, 20, 15, 10, 15),
+        Room(map, 50, 15, 10, 15)
+    ]
+
+    for r in rooms:
+        r.fill_room()
+
+    carve_h_tunnel(map, 25, 55, 23)
+
     return map
 
 def render_all(console, map, objects):
@@ -71,11 +83,9 @@ def void_main_of_silliness():
     libtcod.sys_set_fps(LIMIT_FPS)
 
     map = make_map()
-    map[30][22].pass_through = False
-    map[30][22].see_through = map[40][22].pass_through = map[50][22].see_through = False
 
-    player = Entity(map, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, '@', libtcod.white)
-    npc = Entity(map, SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2 - 5, '@', libtcod.yellow)
+    player = Entity(map, 25, 23, '@', libtcod.white)
+    npc = Entity(map, 25, 27, '@', libtcod.yellow)
     objects = [npc, player]
 
     while not libtcod.console_is_window_closed():
