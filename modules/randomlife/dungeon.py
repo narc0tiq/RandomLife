@@ -21,3 +21,4 @@ def carve_v_tunnel(map, x, y1, y2):
     for y in range(min(y1, y2), max(y1, y2) + 1):
         map[x][y].pass_through = True
         map[x][y].see_through = True
+
