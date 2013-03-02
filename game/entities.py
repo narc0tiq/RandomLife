@@ -1,15 +1,13 @@
-from tcod import libtcodpy as libtcod
-
 class Entity:
-    def __init__(self, map, x, y, char, color):
-        self.map = map
+    def __init__(self, x, y, char, color):
+        self.map = None
         self.x = x
         self.y = y
         self.char = char
         self.color = color
 
     def can_pass(self, dx, dy):
-        cell = self.map[self.x + dx][self.y + dy]
+        cell = self.map.tiles[self.x + dx][self.y + dy]
         return cell.pass_through
 
     def move(self, dx, dy):
@@ -18,11 +16,11 @@ class Entity:
             self.x += dx
             self.y += dy
 
-    def draw(self, con):
+    def draw(self, console):
         """ Draw self to the passed-in console """
-        con.set_default_foreground(self.color)
-        con.put_char(self.x, self.y, self.char)
+        console.set_default_foreground(self.color)
+        console.put_char(self.x, self.y, self.char)
 
-    def clear(self, con):
+    def clear(self, console):
         """ Remove self from the passed-in console """
-        con.put_char(self.x, self.y, ' ')
+        console.put_char(self.x, self.y, ' ')
