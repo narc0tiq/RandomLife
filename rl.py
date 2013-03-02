@@ -29,12 +29,13 @@ def handle_keys(player):
 def make_map():
     map = [[Tile(False) for y in range(const.MAP_HEIGHT)] for x in range(const.MAP_WIDTH)]
 
+    rand = Random(0)
     rooms = []
     for unused in range(const.ROOM_COUNT):
-        w = Random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
-        h = Random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
-        x = Random.get_int(const.MAP_WIDTH - w - 1)
-        y = Random.get_int(const.MAP_HEIGHT - h - 1)
+        w = rand.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
+        h = rand.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
+        x = rand.get_int(const.MAP_WIDTH - w - 1)
+        y = rand.get_int(const.MAP_HEIGHT - h - 1)
 
         new_room = Room(map, x, y, w, h)
         failed = False
@@ -53,7 +54,7 @@ def make_map():
         start_point = rooms[i - 1].center()
         end_point = rooms[i].center()
 
-        if Random.get_int(20) >= 12:
+        if rand.get_int(20) >= 12:
             carve_h_tunnel(map, start_point[0], end_point[0], start_point[1])
             carve_v_tunnel(map, end_point[0], start_point[1], end_point[1])
         else:

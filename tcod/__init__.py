@@ -1,22 +1,37 @@
 import libtcodpy as libtcod
 
 class Random:
-    @staticmethod
-    def get_int(stream_id, min_value=None, max_value=None):
-        """WARNING: Non-standard default arguments! If called with a single
-        parameter, or two parameters, this function will assume they are
-        either max_value, or min_value and max_value, respectively.
+    def __init__(self, stream_id):
+        self.stream_id = stream_id
 
-        To avoid confusion, ALWAYS provide both min_value and max_value
-        if you want to provide the stream_id.
+    def get_int(self, *args, **kwargs):
+        """ rand.get_int([start,] stop) -> random integer
+
+        Note the non-standard order of default arguments: if a single argument
+        is provided, it is assumed to be the stop value, and the start (!) value
+        then defaults to 0.
+
+        You may also use keyword arguments start and stop if you prefer to be
+        explicit -- this may be preferable to using the magic behaviour. Kwargs
+        will override positional arguments.
 
         """
-        if min_value is None: # One argument, assume it's max_value
-            stream_id, min_value, max_value = (0, 0, stream_id)
-        elif max_value is None: # Two arguments, assume neither is stream_id
-            stream_id, min_value, max_value = (0, stream_id, min_value)
+        if len(args) == 0 and 'stop' not in kwargs:
+            raise TypeError('get_int expects either 1 positional argument or the keyword argument "stop"')
 
-        return libtcod.random_get_int(stream_id, min_value, max_value)
+        min_value = max_value = 0
+        if len(args) == 1:
+            max_value = args[0]
+        elif len(args) == 2:
+            min_value = args[0]
+            max_value = args[1]
+
+        if 'start' in kwargs:
+            min_value = kwargs['start']
+        if 'stop' in kwargs:
+            max_value = kwargs['stop']
+
+        return libtcod.random_get_int(self.stream_id, min_value, max_value)
 
 
 class Console:
