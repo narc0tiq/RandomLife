@@ -1,4 +1,4 @@
-from modules import libtcodpy as libtcod
+from tcod import libtcodpy as libtcod
 
 class Entity:
     def __init__(self, map, x, y, char, color):

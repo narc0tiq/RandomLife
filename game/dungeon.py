@@ -1,4 +1,4 @@
-from modules.randomlife.utils import Rect
+from game.utils import Rect
 
 class Room(Rect):
     def __init__(self, map, x, y, w, h):

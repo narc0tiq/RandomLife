@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from modules import libtcodpy as libtcod
-from modules.randomlife.entities import Entity
-from modules.randomlife.tiles import Tile
-from modules.randomlife.dungeon import Room, carve_h_tunnel, carve_v_tunnel
-from modules.randomlife.utils import label_generator
+from tcod import libtcodpy as libtcod
+from game.entities import Entity
+from game.tiles import Tile
+from game.dungeon import Room, carve_h_tunnel, carve_v_tunnel
+from game.utils import label_generator
 
 LIMIT_FPS = 20
 
