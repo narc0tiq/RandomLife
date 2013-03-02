@@ -18,11 +18,11 @@ class Entity:
             self.x += dx
             self.y += dy
 
-    def draw(self, console):
+    def draw(self, con):
         """ Draw self to the passed-in console """
-        libtcod.console_set_default_foreground(console, self.color)
-        libtcod.console_put_char(console, self.x, self.y, self.char, libtcod.BKGND_NONE)
+        con.set_default_foreground(self.color)
+        con.put_char(self.x, self.y, self.char)
 
-    def clear(self, console):
+    def clear(self, con):
         """ Remove self from the passed-in console """
-        libtcod.console_put_char(console, self.x, self.y, ' ', libtcod.BKGND_NONE)
+        con.put_char(self.x, self.y, ' ')

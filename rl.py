@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from tcod import Random, Console
 from tcod import libtcodpy as libtcod
 from game.entities import Entity
 from game.tiles import Tile
@@ -22,20 +23,20 @@ COLOR_DARK_WALL = libtcod.Color(0, 0, 100)
 COLOR_DARK_GROUND = libtcod.Color(50, 50, 150)
 
 def handle_keys(player):
-    key = libtcod.console_wait_for_keypress(True)
+    key = Console.wait_for_keypress(True)
 
     if(key.vk == libtcod.KEY_ENTER and key.lalt):
-        libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+        Console.set_fullscreen(not Console.is_fullscreen())
     elif((key.vk == libtcod.KEY_ESCAPE) or (key.c == ord('q'))):
         return True
 
-    if(libtcod.console_is_key_pressed(libtcod.KEY_UP)):
+    if(Console.is_key_pressed(libtcod.KEY_UP)):
         player.move(0, -1)
-    elif(libtcod.console_is_key_pressed(libtcod.KEY_DOWN)):
+    elif(Console.is_key_pressed(libtcod.KEY_DOWN)):
         player.move(0, 1)
-    elif(libtcod.console_is_key_pressed(libtcod.KEY_LEFT)):
+    elif(Console.is_key_pressed(libtcod.KEY_LEFT)):
         player.move(-1, 0)
-    elif(libtcod.console_is_key_pressed(libtcod.KEY_RIGHT)):
+    elif(Console.is_key_pressed(libtcod.KEY_RIGHT)):
         player.move(1, 0)
 
 def make_map():
@@ -45,10 +46,10 @@ def make_map():
 
     rooms = []
     for unused in range(ROOM_COUNT):
-        w = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-        h = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-        x = libtcod.random_get_int(0, 0, MAP_WIDTH - w - 1)
-        y = libtcod.random_get_int(0, 0, MAP_HEIGHT - h - 1)
+        w = Random.get_int(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        h = Random.get_int(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        x = Random.get_int(MAP_WIDTH - w - 1)
+        y = Random.get_int(MAP_HEIGHT - h - 1)
 
         new_room = Room(map, x, y, w, h)
         failed = False
@@ -67,7 +68,7 @@ def make_map():
         start_point = rooms[i - 1].center()
         end_point = rooms[i].center()
 
-        if libtcod.random_get_int(0, 0, 20) >= 12:
+        if Random.get_int(20) >= 12:
             carve_h_tunnel(map, start_point[0], end_point[0], start_point[1])
             carve_v_tunnel(map, end_point[0], start_point[1], end_point[1])
         else:
@@ -76,35 +77,35 @@ def make_map():
 
     return (map, rooms)
 
-def render_all(console, map, objects):
+def render_all(con, map, objects):
     global SCREEN_HEIGHT, SCREEN_WIDTH, COLOR_DARK_WALL, COLOR_DARK_GROUND
 
     for o in objects:
-        o.draw(console)
+        o.draw(con)
 
     for x in range(len(map)):
         for y in range(len(map[x])):
             can_pass = map[x][y].pass_through
             if can_pass:
-                libtcod.console_set_char_background(console, x, y, COLOR_DARK_WALL, libtcod.BKGND_SET)
+                con.set_char_background(x, y, COLOR_DARK_WALL)
             else:
-                libtcod.console_set_char_background(console, x, y, COLOR_DARK_GROUND, libtcod.BKGND_SET)
+                con.set_char_background(x, y, COLOR_DARK_GROUND)
 
             if not map[x][y].see_through:
-                libtcod.console_set_char_background(console, x, y, libtcod.black, libtcod.BKGND_SET)
+                con.set_char_background(x, y, libtcod.black)
 
-    libtcod.console_blit(console, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
-    libtcod.console_flush()
+    con.blit()
+    Console.flush()
 
     for o in objects:
-        o.clear(console)
+        o.clear(con)
 
 def void_main_of_silliness():
     global SCREEN_HEIGHT, SCREEN_WIDTH, LIMIT_FPS
 
-    libtcod.console_set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-    libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'Random Life', False)
-    console = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
+    Console.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+    Console.init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'Random Life', False)
+    console = Console(SCREEN_WIDTH, SCREEN_HEIGHT)
 
     libtcod.sys_set_fps(LIMIT_FPS)
 
@@ -124,7 +125,7 @@ def void_main_of_silliness():
 
     objects.extend([entrance, npc, player])
 
-    while not libtcod.console_is_window_closed():
+    while not Console.is_window_closed():
         render_all(console, map, objects)
 
         if handle_keys(player):
