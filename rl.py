@@ -2,25 +2,12 @@
 
 from tcod import Random, Console
 from tcod import libtcodpy as libtcod
+
+from game import const
 from game.entities import Entity
 from game.tiles import Tile
 from game.dungeon import Room, carve_h_tunnel, carve_v_tunnel
 from game.utils import label_generator
-
-LIMIT_FPS = 20
-
-SCREEN_WIDTH = 80
-SCREEN_HEIGHT = 50
-
-MAP_WIDTH = 80
-MAP_HEIGHT = 45
-
-ROOM_MAX_SIZE = 10
-ROOM_MIN_SIZE = 6
-ROOM_COUNT = 30
-
-COLOR_DARK_WALL = libtcod.Color(0, 0, 100)
-COLOR_DARK_GROUND = libtcod.Color(50, 50, 150)
 
 def handle_keys(player):
     key = Console.wait_for_keypress(True)
@@ -40,16 +27,14 @@ def handle_keys(player):
         player.move(1, 0)
 
 def make_map():
-    global MAP_HEIGHT, MAP_WIDTH, ROOM_MIN_SIZE, ROOM_MAX_SIZE, ROOM_COUNT
-
-    map = [[Tile(False) for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
+    map = [[Tile(False) for y in range(const.MAP_HEIGHT)] for x in range(const.MAP_WIDTH)]
 
     rooms = []
-    for unused in range(ROOM_COUNT):
-        w = Random.get_int(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-        h = Random.get_int(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-        x = Random.get_int(MAP_WIDTH - w - 1)
-        y = Random.get_int(MAP_HEIGHT - h - 1)
+    for unused in range(const.ROOM_COUNT):
+        w = Random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
+        h = Random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
+        x = Random.get_int(const.MAP_WIDTH - w - 1)
+        y = Random.get_int(const.MAP_HEIGHT - h - 1)
 
         new_room = Room(map, x, y, w, h)
         failed = False
@@ -78,8 +63,6 @@ def make_map():
     return (map, rooms)
 
 def render_all(con, map, objects):
-    global SCREEN_HEIGHT, SCREEN_WIDTH, COLOR_DARK_WALL, COLOR_DARK_GROUND
-
     for o in objects:
         o.draw(con)
 
@@ -87,9 +70,9 @@ def render_all(con, map, objects):
         for y in range(len(map[x])):
             can_pass = map[x][y].pass_through
             if can_pass:
-                con.set_char_background(x, y, COLOR_DARK_WALL)
+                con.set_char_background(x, y, const.COLOR_DARK_WALL)
             else:
-                con.set_char_background(x, y, COLOR_DARK_GROUND)
+                con.set_char_background(x, y, const.COLOR_DARK_GROUND)
 
             if not map[x][y].see_through:
                 con.set_char_background(x, y, libtcod.black)
@@ -101,13 +84,11 @@ def render_all(con, map, objects):
         o.clear(con)
 
 def void_main_of_silliness():
-    global SCREEN_HEIGHT, SCREEN_WIDTH, LIMIT_FPS
-
     Console.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-    Console.init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'Random Life', False)
-    console = Console(SCREEN_WIDTH, SCREEN_HEIGHT)
+    Console.init_root(const.SCREEN_WIDTH, const.SCREEN_HEIGHT, 'Random Life', False)
+    console = Console(const.SCREEN_WIDTH, const.SCREEN_HEIGHT)
 
-    libtcod.sys_set_fps(LIMIT_FPS)
+    libtcod.sys_set_fps(const.LIMIT_FPS)
 
     map, rooms = make_map()
 
@@ -130,7 +111,6 @@ def void_main_of_silliness():
 
         if handle_keys(player):
             break
-
 
 
 if(__name__ == "__main__"):
