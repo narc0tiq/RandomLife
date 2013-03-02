@@ -33,6 +33,8 @@ class Random:
 
         return libtcod.random_get_int(self.stream_id, min_value, max_value)
 
+# A default Random for anyone to use
+random = Random(0)
 
 class Console:
     @staticmethod
