@@ -28,3 +28,7 @@ COLOR_ORC = libtcod.desaturated_green
 COLOR_TROLL = libtcod.darker_green
 
 MAX_ROOM_MONSTERS = 5
+
+ACTION_NONE = 0
+ACTION_MOVE = 1
+ACTION_EXIT = 2

@@ -12,7 +12,7 @@ def handle_keys(player):
     if(key.vk == libtcod.KEY_ENTER and key.lalt):
         Console.set_fullscreen(not Console.is_fullscreen())
     elif((key.vk == libtcod.KEY_ESCAPE) or (key.c == ord('q'))):
-        return True
+        return const.ACTION_EXIT
     elif key.c == ord('N'):
         player.blocks = not player.blocks
         print "Noclip set to ", not player.blocks
@@ -21,12 +21,18 @@ def handle_keys(player):
 
     if(Console.is_key_pressed(libtcod.KEY_UP)):
         player.move(0, -1)
+        return const.ACTION_MOVE
     elif(Console.is_key_pressed(libtcod.KEY_DOWN)):
         player.move(0, 1)
+        return const.ACTION_MOVE
     elif(Console.is_key_pressed(libtcod.KEY_LEFT)):
         player.move(-1, 0)
+        return const.ACTION_MOVE
     elif(Console.is_key_pressed(libtcod.KEY_RIGHT)):
         player.move(1, 0)
+        return const.ACTION_MOVE
+
+    return const.ACTION_NONE
 
 def void_main_of_silliness():
     Console.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
@@ -54,7 +60,13 @@ def void_main_of_silliness():
         Console.flush()
         map.post_render()
 
-        if handle_keys(player): break
+        action = handle_keys(player)
+        if action == const.ACTION_EXIT:
+            break
+        elif action != const.ACTION_NONE:
+            for e in map.entities:
+                if isinstance(e, dungeon.EntityLiving) and e != player:
+                    e.taunt()
 
 if(__name__ == "__main__"):
     void_main_of_silliness()

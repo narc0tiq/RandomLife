@@ -122,6 +122,9 @@ class Entity:
         """ Remove self from the passed-in console """
         console.put_char(self.x, self.y, ' ')
 
+    def __str__(self):
+        return self.name
+
 class EntityItem(Entity):
     def __init__(self, x, y, char, name, color):
         Entity.__init__(self, x, y, char, name, color, blocks=False)
@@ -129,6 +132,21 @@ class EntityItem(Entity):
 class EntityLiving(Entity):
     def __init__(self, x, y, char, name, color):
         Entity.__init__(self, x, y, char, name, color, blocks=True)
+
+    def move(self, dx, dy):
+        for e in self.map.entities:
+            if isinstance(e, EntityLiving) and e.x == self.x + dx and e.y == self.y + dy:
+                self.attack(e)
+                return
+
+        Entity.move(self, dx, dy)
+
+    def attack(self, target):
+        print self.name.capitalize(), 'attacks', target.name, 'but deals no damage.'
+
+    def taunt(self):
+        if self.map.is_visible(self.x, self.y):
+            print self.name.capitalize(), 'snorts in your general direction.'
 
 
 class Map:
