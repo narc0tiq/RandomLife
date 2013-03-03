@@ -85,6 +85,7 @@ class Entity:
         self.color = color
         self.on_move = []
         self.blocks = blocks
+        self.attackable = False
 
     def can_pass(self, dx, dy, the_map=None):
         if not self.blocks: # non-blocking entities can pass through anything
@@ -132,10 +133,11 @@ class EntityItem(Entity):
 class EntityLiving(Entity):
     def __init__(self, x, y, char, name, color):
         Entity.__init__(self, x, y, char, name, color, blocks=True)
+        self.attackable = True
 
     def move(self, dx, dy):
         for e in self.map.entities:
-            if isinstance(e, EntityLiving) and e.x == self.x + dx and e.y == self.y + dy:
+            if e.attackable and e.x == self.x + dx and e.y == self.y + dy:
                 self.attack(e)
                 return
 
