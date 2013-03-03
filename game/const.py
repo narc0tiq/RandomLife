@@ -23,3 +23,8 @@ COLOR_LIGHT_GROUND = libtcod.Color(200, 180, 50)
 
 COLOR_DARKNESS = libtcod.black
 COLOR_LABEL = libtcod.blue
+
+COLOR_ORC = libtcod.desaturated_green
+COLOR_TROLL = libtcod.darker_green
+
+MAX_ROOM_MONSTERS = 5

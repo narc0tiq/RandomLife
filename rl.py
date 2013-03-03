@@ -4,15 +4,20 @@ from tcod import random, Console
 from tcod import libtcodpy as libtcod
 
 from game import const
-from game.dungeon import Map, Entity
+from game import dungeon
 
 def handle_keys(player):
-    key = Console.wait_for_keypress(True)
+    key, mouse = Console.wait_for_event(libtcod.EVENT_KEY_PRESS, flush=True)
 
     if(key.vk == libtcod.KEY_ENTER and key.lalt):
         Console.set_fullscreen(not Console.is_fullscreen())
     elif((key.vk == libtcod.KEY_ESCAPE) or (key.c == ord('q'))):
         return True
+    elif key.c == ord('N'):
+        player.blocks = not player.blocks
+        print "Noclip set to ", not player.blocks
+    elif key.c == ord('X'):
+        player.map.fullbright = not player.map.fullbright
 
     if(Console.is_key_pressed(libtcod.KEY_UP)):
         player.move(0, -1)
@@ -30,18 +35,14 @@ def void_main_of_silliness():
 
     libtcod.sys_set_fps(const.LIMIT_FPS)
 
-    map = Map(console)
+    map = dungeon.Map(console)
     map.generate()
     map.label_rooms()
+    map.populate_rooms()
 
     spawn = map.rooms[0].center()
-    entrance = Entity(spawn[0], spawn[1], '#', libtcod.green)
-    player = Entity(spawn[0], spawn[1], '@', libtcod.white)
-    npc = Entity(spawn[0], spawn[1] + 2, '@', libtcod.yellow)
-
-    map.add_entity(entrance)
+    player = dungeon.EntityLiving(spawn.x, spawn.y, '@', 'the adventurer', libtcod.white)
     map.add_entity(player)
-    map.add_entity(npc)
 
     recalc_fov = lambda entity: map.fov_map.compute_fov(entity.x, entity.y)
     recalc_fov(player)

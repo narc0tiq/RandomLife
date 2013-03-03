@@ -47,8 +47,14 @@ class Console:
         return libtcod.console_init_root(width, height, title, fullscreen, renderer)
 
     @staticmethod
-    def wait_for_keypress(flush):
+    def wait_for_keypress(flush=False):
         return libtcod.console_wait_for_keypress(flush)
+
+    @staticmethod
+    def wait_for_event(mask, flush=False):
+        key, mouse = (libtcod.Key(), libtcod.Mouse())
+        libtcod.sys_wait_for_event(mask, key, mouse, flush)
+        return (key, mouse)
 
     @staticmethod
     def set_fullscreen(want_fullscreen=True):
