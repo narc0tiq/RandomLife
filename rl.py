@@ -4,8 +4,7 @@ from tcod import random, Console
 from tcod import libtcodpy as libtcod
 
 from game import const
-from game.dungeon import Map
-from game.entities import Entity
+from game.dungeon import Map, Entity
 
 def handle_keys(player):
     key = Console.wait_for_keypress(True)

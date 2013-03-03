@@ -1,8 +1,15 @@
 from tcod import random
 from game import const
 from game import utils
-from game.entities import Entity
-from game.tiles import Tile
+
+class Tile:
+    def __init__(self, pass_through, see_through = None):
+        self.pass_through = pass_through
+
+        if(see_through is None):
+            see_through = pass_through
+        self.see_through = see_through
+
 
 class Room(utils.Rect):
     def __init__(self, map, x, y, w, h):
@@ -14,6 +21,34 @@ class Room(utils.Rect):
             for y in range(self.y1 + 1, self.y2 - 1):
                 self.map.tiles[x][y].pass_through = True
                 self.map.tiles[x][y].see_through = True
+
+
+class Entity:
+    def __init__(self, x, y, char, color):
+        self.map = None
+        self.x = x
+        self.y = y
+        self.char = char
+        self.color = color
+
+    def can_pass(self, dx, dy):
+        cell = self.map.tiles[self.x + dx][self.y + dy]
+        return cell.pass_through
+
+    def move(self, dx, dy):
+        """ Move by dx in the X direction and by dy in the Y direction """
+        if self.can_pass(dx, dy):
+            self.x += dx
+            self.y += dy
+
+    def draw(self, console):
+        """ Draw self to the passed-in console """
+        console.set_default_foreground(self.color)
+        console.put_char(self.x, self.y, self.char)
+
+    def clear(self, console):
+        """ Remove self from the passed-in console """
+        console.put_char(self.x, self.y, ' ')
 
 
 class Map:
