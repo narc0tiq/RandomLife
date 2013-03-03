@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+from game import const
 
 class Random:
     def __init__(self, stream_id):
@@ -110,3 +111,19 @@ class Console:
     def put_char(self, x, y, char, flags=libtcod.BKGND_NONE):
         return libtcod.console_put_char(self.console_id, x, y, char, flags)
 
+
+class Map:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.map = libtcod.map_new(width, height)
+
+    def set_properties(self, x, y, see_through, pass_through):
+        return libtcod.map_set_properties(self.map, x, y, see_through, pass_through)
+
+    def compute_fov(self, x, y, radius=const.FOV_RADIUS,
+                    light_walls=const.FOV_LIGHT_WALLS, algorithm=const.FOV_ALGORITHM):
+        return libtcod.map_compute_fov(self.map, x, y, radius, light_walls, algorithm)
+
+    def is_in_fov(self, x, y):
+        return libtcod.map_is_in_fov(self.map, x, y)

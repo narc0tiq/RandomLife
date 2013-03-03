@@ -43,6 +43,10 @@ def void_main_of_silliness():
     map.add_entity(player)
     map.add_entity(npc)
 
+    recalc_fov = lambda entity: map.fov_map.compute_fov(entity.x, entity.y)
+    recalc_fov(player)
+    player.on_move.append(recalc_fov)
+
     while not Console.is_window_closed():
         map.render()
         console.blit()

@@ -1,4 +1,4 @@
-from tcod import random
+import tcod
 from game import const
 from game import utils
 
@@ -9,6 +9,28 @@ class Tile:
         if(see_through is None):
             see_through = pass_through
         self.see_through = see_through
+        self.explored = False
+
+    def render(self, x, y, map):
+        is_visible = map.fov_map.is_in_fov(x, y)
+        is_wall = not self.pass_through
+
+        color = const.COLOR_DARKNESS
+        if is_visible:
+            self.explored = True
+            if is_wall:
+                color = const.COLOR_LIGHT_WALL
+            else:
+                color = const.COLOR_LIGHT_GROUND
+        else: # not in fov
+            if not self.explored:
+                color = const.COLOR_DARKNESS
+            elif is_wall:
+                color = const.COLOR_DARK_WALL
+            else:
+                color = const.COLOR_DARK_GROUND
+
+        map.console.set_char_background(x, y, color)
 
 
 class Room(utils.Rect):
@@ -30,6 +52,7 @@ class Entity:
         self.y = y
         self.char = char
         self.color = color
+        self.on_move = []
 
     def can_pass(self, dx, dy):
         cell = self.map.tiles[self.x + dx][self.y + dy]
@@ -41,10 +64,14 @@ class Entity:
             self.x += dx
             self.y += dy
 
+        for f in self.on_move:
+            f(self)
+
     def draw(self, console):
         """ Draw self to the passed-in console """
-        console.set_default_foreground(self.color)
-        console.put_char(self.x, self.y, self.char)
+        if self.map.fov_map.is_in_fov(self.x, self.y):
+            console.set_default_foreground(self.color)
+            console.put_char(self.x, self.y, self.char)
 
     def clear(self, console):
         """ Remove self from the passed-in console """
@@ -57,6 +84,7 @@ class Map:
         self.rooms = []
         self.entities = []
         self.console = console
+        self.fov_map = tcod.Map(console.width, console.height)
 
     def add_entity(self, entity):
         self.entities.append(entity)
@@ -70,13 +98,7 @@ class Map:
     def render(self):
         for x in range(len(self.tiles)):
             for y in range(len(self.tiles[x])):
-                if self.tiles[x][y].pass_through:
-                    self.console.set_char_background(x, y, const.COLOR_DARK_WALL)
-                else:
-                    self.console.set_char_background(x, y, const.COLOR_DARK_GROUND)
-
-                if not self.tiles[x][y].see_through:
-                    self.console.set_char_background(x, y, const.COLOR_DARKNESS)
+                self.tiles[x][y].render(x, y, self)
 
         for e in self.entities:
             e.draw(self.console)
@@ -87,11 +109,11 @@ class Map:
 
     def generate(self):
         for unused in range(const.ROOM_COUNT):
-            w = random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
-            h = random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
+            w = tcod.random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
+            h = tcod.random.get_int(const.ROOM_MIN_SIZE, const.ROOM_MAX_SIZE)
             # No off-screen rooms, okay?
-            x = random.get_int(self.console.width - w - 1)
-            y = random.get_int(self.console.height - h - 1)
+            x = tcod.random.get_int(self.console.width - w - 1)
+            y = tcod.random.get_int(self.console.height - h - 1)
 
             new_room = Room(self, x, y, w, h)
             is_overlapping = False
@@ -104,6 +126,11 @@ class Map:
 
             self.rooms.append(new_room)
         self.carve_rooms()
+
+        for x in range(len(self.tiles)):
+            for y in range(len(self.tiles[x])):
+                tile = self.tiles[x][y]
+                self.fov_map.set_properties(x, y, tile.see_through, tile.pass_through)
 
     def carve_h_tunnel(self, x1, x2, y):
         for x in range(min(x1, x2), max(x1, x2) + 1):
@@ -124,7 +151,7 @@ class Map:
             start_point = self.rooms[i-1].center()
             end_point = self.rooms[i].center()
 
-            if random.get_int(20) >= 12: # slight bias is intended
+            if tcod.random.get_int(20) >= 12: # slight bias is intended
                 self.carve_h_tunnel(start_point[0], end_point[0], start_point[1])
                 self.carve_v_tunnel(end_point[0], start_point[1], end_point[1])
             else:
