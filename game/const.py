@@ -26,9 +26,15 @@ COLOR_LABEL = libtcod.blue
 
 COLOR_ORC = libtcod.desaturated_green
 COLOR_TROLL = libtcod.darker_green
+COLOR_REMAINS = libtcod.dark_red
+
+COLOR_GUI_FOREGROUND = libtcod.white
 
 MAX_ROOM_MONSTERS = 5
 
 ACTION_NONE = 0
 ACTION_MOVE = 1
 ACTION_EXIT = 2
+
+BACKGROUND_NONE = libtcod.BKGND_NONE
+LEFT = libtcod.LEFT

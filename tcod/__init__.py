@@ -117,6 +117,9 @@ class Console:
     def put_char(self, x, y, char, flags=libtcod.BKGND_NONE):
         return libtcod.console_put_char(self.console_id, x, y, char, flags)
 
+    def print_ex(self, x, y, flags, align, text):
+        return libtcod.console_print_ex(self.console_id, x, y, flags, align, text)
+
 
 class Map:
     def __init__(self, width, height):

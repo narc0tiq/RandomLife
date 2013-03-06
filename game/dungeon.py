@@ -1,6 +1,5 @@
 import tcod
-from game import const
-from game import utils
+from game import const, entities, utils
 
 class Tile:
     def __init__(self, pass_through, see_through = None):
@@ -52,15 +51,28 @@ class Room(utils.Rect):
 
     def populate(self):
         monster_count = tcod.random.get_int(const.MAX_ROOM_MONSTERS)
+        def monster_death(monster):
+            print monster.name.capitalize(), 'has been slain!'
+            monster.char = '%'
+            monster.color = const.COLOR_REMAINS
+            monster.blocks = False
+            monster.fighter = None
+            monster.ai = None
+            monster.name = 'remains of ' + monster.name
+            monster.map.entity_to_bottom(monster)
 
         for i in range(monster_count):
             x = tcod.random.get_int(self.x1, self.x2-1)
             y = tcod.random.get_int(self.y1, self.y2-1)
 
             if tcod.random.get_int(20) < 16:
-                monster = EntityLiving(x, y, 'o', 'an orc', const.COLOR_ORC)
+                fighter = entities.Fighter(hp=10, defense=0, power=3, on_death=monster_death)
+                ai = entities.BasicMonster()
+                monster = entities.EntityLiving(x, y, 'o', 'an orc', const.COLOR_ORC, fighter=fighter, ai=ai)
             else:
-                monster = EntityLiving(x, y, 'T', 'a great Troll', const.COLOR_TROLL)
+                fighter = entities.Fighter(hp=14, defense=1, power=4, on_death=monster_death)
+                ai = entities.BasicMonster()
+                monster = entities.EntityLiving(x, y, 'T', 'a great troll', const.COLOR_TROLL, fighter=fighter, ai=ai)
 
             if monster.can_pass(0, 0, self.map):
                 self.map.add_entity(monster)
@@ -75,82 +87,6 @@ class Room(utils.Rect):
         return 'Room at ((%d, %d)-(%d, %d))' % (self.x1, self.y1, self.x2, self.y2)
 
 
-class Entity:
-    def __init__(self, x, y, char, name, color, blocks):
-        self.map = None
-        self.x = x
-        self.y = y
-        self.char = char
-        self.name = name
-        self.color = color
-        self.on_move = []
-        self.blocks = blocks
-        self.attackable = False
-
-    def can_pass(self, dx, dy, the_map=None):
-        if not self.blocks: # non-blocking entities can pass through anything
-            return True
-
-        if the_map is None:
-            the_map = self.map
-
-        cell = the_map.tiles[self.x + dx][self.y + dy]
-        if not cell.pass_through:
-            return False
-
-        for e in the_map.entities:
-            if e.blocks and e.x == self.x + dx and e.y == self.y + dy:
-                return False
-
-        return True
-
-    def move(self, dx, dy):
-        """ Move by dx in the X direction and by dy in the Y direction """
-        if self.can_pass(dx, dy):
-            self.x += dx
-            self.y += dy
-
-        for f in self.on_move:
-            f(self)
-
-    def draw(self, console):
-        """ Draw self to the passed-in console """
-        if self.map.is_visible(self.x, self.y):
-            console.set_default_foreground(self.color)
-            console.put_char(self.x, self.y, self.char)
-
-    def clear(self, console):
-        """ Remove self from the passed-in console """
-        console.put_char(self.x, self.y, ' ')
-
-    def __str__(self):
-        return self.name
-
-class EntityItem(Entity):
-    def __init__(self, x, y, char, name, color):
-        Entity.__init__(self, x, y, char, name, color, blocks=False)
-
-class EntityLiving(Entity):
-    def __init__(self, x, y, char, name, color):
-        Entity.__init__(self, x, y, char, name, color, blocks=True)
-        self.attackable = True
-
-    def move(self, dx, dy):
-        for e in self.map.entities:
-            if e.attackable and e.x == self.x + dx and e.y == self.y + dy:
-                self.attack(e)
-                return
-
-        Entity.move(self, dx, dy)
-
-    def attack(self, target):
-        print self.name.capitalize(), 'attacks', target.name, 'but deals no damage.'
-
-    def taunt(self):
-        if self.map.is_visible(self.x, self.y):
-            print self.name.capitalize(), 'snorts in your general direction.'
-
-
 class Map:
     def __init__(self, console):
         self.tiles = [[ Tile(False) for y in range(console.height)] for x in range(console.width)]
@@ -161,6 +97,7 @@ class Map:
         self.width = console.width
         self.height = console.height
         self.fullbright = False
+        self.player = None
 
     def is_visible(self, x, y):
         if self.fullbright:
@@ -172,10 +109,23 @@ class Map:
         self.entities.append(entity)
         entity.map = self
 
+    def entity_to_bottom(self, entity):
+        if entity in self.entities:
+            self.entities.remove(entity)
+            self.entities.insert(0, entity)
+
     def remove_entity(self, entity):
         if entity in self.entities:
             self.entities.remove(entity)
             entity.clear(self.console)
+
+    def entities_at(self, x, y):
+        found = []
+        for e in self.entities:
+            if e.x == x and e.y == y:
+                found.append(e)
+
+        return found
 
     def render(self):
         for x in range(len(self.tiles)):
@@ -243,6 +193,6 @@ class Map:
         labels = utils.label_generator('A')
         for r in self.rooms:
             center = r.center()
-            label = EntityItem(center.x, center.y, labels.next(), 'a room label', const.COLOR_LABEL)
+            label = entities.EntityItem(center.x, center.y, labels.next(), 'a room label', const.COLOR_LABEL)
             self.add_entity(label)
 
