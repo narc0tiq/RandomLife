@@ -120,6 +120,9 @@ class Console:
     def print_ex(self, x, y, flags, align, text):
         return libtcod.console_print_ex(self.console_id, x, y, flags, align, text)
 
+    def rect(self, x, y, width, height, clear=False, effect=libtcod.BKGND_SET):
+        return libtcod.console_rect(self.console_id, x, y, width, height, clear, effect)
+
 
 class Map:
     def __init__(self, width, height):
@@ -136,3 +139,22 @@ class Map:
 
     def is_in_fov(self, x, y):
         return libtcod.map_is_in_fov(self.map, x, y)
+
+BACKGROUND_NONE = libtcod.BKGND_NONE
+BACKGROUND_SET = libtcod.BKGND_SET
+BACKGROUND_MULTIPLY = libtcod.BKGND_MULTIPLY
+BACKGROUND_LIGHTEN = libtcod.BKGND_LIGHTEN
+BACKGROUND_DARKEN = libtcod.BKGND_DARKEN
+BACKGROUND_SCREEN = libtcod.BKGND_SCREEN
+BACKGROUND_COLOR_DODGE = libtcod.BKGND_COLOR_DODGE
+BACKGROUND_COLOR_BURN = libtcod.BKGND_COLOR_BURN
+BACKGROUND_ADD = libtcod.BKGND_ADD
+BACKGROUND_ADDALPHA = libtcod.BKGND_ADDALPHA
+BACKGROUND_BURN = libtcod.BKGND_BURN
+BACKGROUND_OVERLAY = libtcod.BKGND_OVERLAY
+BACKGROUND_ALPHA = libtcod.BKGND_ALPHA
+BACKGROUND_DEFAULT = libtcod.BKGND_DEFAULT
+
+ALIGN_LEFT = libtcod.LEFT
+ALIGN_RIGHT = libtcod.RIGHT
+ALIGN_CENTER = libtcod.CENTER
