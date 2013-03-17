@@ -122,7 +122,8 @@ def menu(header, options, width):
     con.blit(dest_x=x, dest_y=y, alpha_bg=0.7)
 
     tcod.flush()
-    return tcod.wait_for_keypress(flush=True)
+    key, mouse = tcod.wait_for_event(tcod.EVENT_KEY_PRESS, flush=True)
+    return key
 
 def inventory_menu(player):
     if len(player.inventory) == 0:
