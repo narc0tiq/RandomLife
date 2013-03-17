@@ -94,11 +94,12 @@ def player_death(player):
     player.char = '%'
     player.color = const.COLOR_REMAINS
     player.name = 'remains of ' + player.name
+    player.map.fullbright = True
 
 def new_game():
     map = dungeon.Map(console)
     map.generate()
-    map.label_rooms()
+    #map.label_rooms()
     map.populate_rooms()
 
     spawn = map.rooms[0].center()

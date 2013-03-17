@@ -1,6 +1,8 @@
 .*
 !.git*
 
+*.pyc
+savegame
+
 # Don't want blobs in my git repo that can be gotten elsewhere
 *.dll
-*.pyc

@@ -79,6 +79,7 @@ class EntityItem(Entity):
 
     def remove_from_map(self):
         self.map.remove_entity(self)
+        self.map = None
 
 class EntityLiving(Entity):
     def __init__(self, x, y, char, name, color, fighter=None, ai=None):
