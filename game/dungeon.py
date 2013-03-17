@@ -63,15 +63,38 @@ def cast_lightning(scroll, user):
     target.fighter.take_damage(const.LIGHTNING_DAMAGE)
 
 def cast_confuse(scroll, user):
-    target = user.map.find_nearest_shootable(user, const.CONFUSE_RANGE)
+    panel.add_message('Left-click a monster to confuse, or right-click to cancel.', tcod.COLOR_LIGHT_CYAN)
+    target = utils.target_monster(user, const.CONFUSE_RANGE)
     if target is None:
-        panel.add_message('There are no monsters close enough to strike.', tcod.COLOR_RED)
         return const.ITEM_USE_CANCELLED
 
     panel.add_message('You notice ' + target.name + ' suddenly stumble. It doesn\'t seem to be paying attention to you anymore.',
                       tcod.COLOR_LIGHT_GREEN)
     target.ai = entities.ConfusedMonster(target.ai)
     target.ai.owner = target
+
+def cast_fireball(scroll, user):
+    panel.add_message('Left-click a target tile for the fireball, or right-click to cancel.', tcod.COLOR_LIGHT_CYAN)
+    x, y = utils.target_tile(user)
+    if x is None:
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('A ball of fire appears in front of your pointing finger as you finish reading the scroll, ' +
+                      'and flies to the indicated location before exploding.', tcod.COLOR_FLAME)
+
+    targets = user.map.targets_near(x, y, const.FIREBALL_RADIUS)
+    if len(targets) == 0: # No targets? Tough luck.
+        return const.ITEM_USE_DESTROY
+
+    targets_string = ', '.join([t.name for t in targets]).capitalize()
+    if len(targets) == 1:
+        targets_string += ' is'
+    else:
+        targets_string += ' are all'
+    panel.add_message(targets_string + ' burned for ' + str(const.FIREBALL_DAMAGE) + ' HP.', tcod.COLOR_ORANGE)
+
+    for t in targets:
+        t.fighter.take_damage(const.FIREBALL_DAMAGE)
 
 class Room(utils.Rect):
     def __init__(self, map):
@@ -117,12 +140,15 @@ class Room(utils.Rect):
             if chance < 70:
                 item_component = entities.Item(on_use=use_health_potion)
                 item = entities.EntityItem(x, y, '!', 'a healing potion', tcod.COLOR_VIOLET, item=item_component)
-            elif chance < 70+15:
+            elif chance < 70+10:
                 item_component = entities.Item(on_use=cast_lightning)
                 item = entities.EntityItem(x, y, '#', 'a scroll of lightning bolt', tcod.COLOR_LIGHT_YELLOW, item=item_component)
-            else:
+            elif chance < 70+10+10:
                 item_component = entities.Item(on_use=cast_confuse)
                 item = entities.EntityItem(x, y, '#', 'a scroll of confuse', tcod.COLOR_LIGHT_LIME, item=item_component)
+            else:
+                item_component = entities.Item(on_use=cast_fireball)
+                item = entities.EntityItem(x, y, '#', 'a scroll of fireball', tcod.COLOR_FLAME, item=item_component)
 
             if item.can_pass(0, 0, self.map):
                 self.map.add_entity(item)
@@ -174,19 +200,26 @@ class Map:
         if only_visible and not self.is_visible(x, y):
             return []
 
-        found = []
-        for e in self.entities:
-            if e.x == x and e.y == y:
-                found.append(e)
+        return [e for e in self.entities
+                if e.x == x and e.y == y]
 
-        return found
+    def targets_at(self, x, y, only_visible=False):
+        return [e for e in self.entities_at(x, y, only_visible) if e.fighter]
+
+    def entities_near(self, x, y, max_range):
+        return [e for e in self.entities
+                if e.distance(x, y) <= max_range]
+
+    def targets_near(self, x, y, max_range):
+        ents = self.entities_near(x, y, max_range)
+        return [e for e in ents if e.fighter]
 
     def find_nearest_shootable(self, entity, max_range):
         nearest_target = None
         nearest_dist = max_range + 1
 
-        for e in self.entities:
-            if e.fighter and not e == entity and self.is_visible(e.x, e.y):
+        for e in self.targets_near(entity.x, entity.y, max_range):
+            if not e == entity and self.is_visible(e.x, e.y):
                 dist = entity.distance_to(e)
                 if dist < nearest_dist:
                     nearest_target = e

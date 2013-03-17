@@ -135,3 +135,40 @@ def inventory_menu(player):
     index = key.c - ord('a')
     if index >= 0 and index < len(options):
         return player.inventory[index].item
+
+def render_all(player):
+    player.map.render()
+    panel.clear(const.PANEL_BACKGROUND)
+    panel.render_bar(1, 1, const.BAR_WIDTH, label='HP',
+                     value=player.fighter.hp, maximum=player.fighter.max_hp,
+                     bar_color=const.PANEL_BAR_COLOR, back_color=const.PANEL_BAR_BACK,
+                     text_color=const.PANEL_TEXT_COLOR)
+
+    player.map.console.blit()
+    panel.render(tcod.root_console)
+    tcod.flush()
+    player.map.post_render()
+
+def target_tile(player, max_range=None):
+    while True:
+        tcod.flush()
+        key, mouse = tcod.check_for_event()
+        render_all(player)
+
+        x, y = (mouse.cx, mouse.cy)
+        if mouse.rbutton_pressed or key.vk == tcod.KEY_ESCAPE:
+            panel.add_message('Cancelled.', tcod.COLOR_RED)
+            return (None, None)
+        elif(mouse.lbutton_pressed and player.map.is_visible(x, y) and
+             (max_range is None or player.distance(x, y) <= max_range)):
+            return (x, y)
+
+def target_monster(player, max_range=None):
+    while True:
+        x, y = target_tile(player, max_range)
+        if x is None:
+            return None
+
+        for e in player.map.targets_at(x, y, only_visible=True):
+            if e != player:
+                return e

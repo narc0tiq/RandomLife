@@ -114,17 +114,7 @@ def void_main_of_silliness():
     panel.add_message("Have fun, and enjoy your death!", tcod.COLOR_RED)
 
     while not tcod.is_window_closed():
-        map.render()
-        panel.clear(const.PANEL_BACKGROUND)
-        panel.render_bar(1, 1, const.BAR_WIDTH, label='HP',
-                         value=player.fighter.hp, maximum=player.fighter.max_hp,
-                         bar_color=const.PANEL_BAR_COLOR, back_color=const.PANEL_BAR_BACK,
-                         text_color=const.PANEL_TEXT_COLOR)
-
-        console.blit()
-        panel.render(tcod.root_console)
-        tcod.flush()
-        map.post_render()
+        utils.render_all(player)
 
         action = handle_events(player)
         if action == const.ACTION_EXIT:

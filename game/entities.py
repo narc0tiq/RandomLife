@@ -56,6 +56,9 @@ class Entity:
 
         return math.sqrt(dx**2 + dy**2)
 
+    def distance(self, x, y):
+        return math.sqrt((x - self.x)**2 + (y - self.y)**2)
+
     def draw(self, console):
         """ Draw self to the passed-in console """
         if self.map.is_visible(self.x, self.y):
