@@ -55,6 +55,10 @@ def handle_events(player):
             item = utils.inventory_menu(player)
             if item:
                 item.use(player)
+        elif key.c == ord('d'):
+            item = utils.inventory_menu(player)
+            if item:
+                item.drop(player)
 
     ents = player.map.entities_at(mouse.cx, mouse.cy, only_visible=True)
     if len(ents) > 0:

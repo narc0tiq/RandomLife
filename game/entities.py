@@ -177,6 +177,14 @@ class Item:
             self.owner.remove_from_map()
             panel.add_message('You picked up ' + self.owner.name + '.', tcod.COLOR_GREEN)
 
+    def drop(self, dropper):
+        dropper.map.add_entity(self.owner)
+        dropper.map.entity_to_bottom(self.owner)
+        dropper.inventory.remove(self.owner)
+        self.owner.x = dropper.x
+        self.owner.y = dropper.y
+        panel.add_message('You drop ' + self.owner.name + '.', tcod.COLOR_YELLOW)
+
     def use(self, user):
         if self.on_use is None:
             panel.add_message(self.owner.name.capitalize() + ' is unusable!', tcod.COLOR_RED)
