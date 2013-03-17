@@ -139,6 +139,9 @@ def inventory_menu(player):
     if index >= 0 and index < len(options):
         return player.inventory[index].item
 
+def msgbox(text, width=50):
+    menu("\n\n%s\n\n"%text, [], width)
+
 def render_all(player):
     player.map.render()
     panel.clear(const.PANEL_BACKGROUND)

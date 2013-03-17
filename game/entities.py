@@ -69,12 +69,6 @@ class Entity:
         """ Remove self from the passed-in console """
         console.put_char(self.x, self.y, ' ')
 
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return self.name
-
 class EntityItem(Entity):
     def __init__(self, x, y, char, name, color, item=None):
         Entity.__init__(self, x, y, char, name, color, blocks=False)

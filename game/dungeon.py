@@ -253,7 +253,9 @@ class Map:
 
             self.rooms.append(new_room)
         self.carve_rooms()
+        self.init_fov()
 
+    def init_fov(self):
         for x in range(len(self.tiles)):
             for y in range(len(self.tiles[x])):
                 tile = self.tiles[x][y]

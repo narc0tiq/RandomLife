@@ -86,8 +86,16 @@ class Console:
             self.height = libtcod.console_get_height(console_id)
 
     def __del__(self):
-        if self.console_id > 0: # Root console cannot be console_delete()d
+        if self.console_id != self.ROOT_ID: # Root console cannot be console_delete()d
             libtcod.console_delete(self.console_id)
+
+    def __getstate__(self):
+        if self.console_id == self.ROOT_ID:
+            return {}
+        return {'width': self.width, 'height': self.height}
+
+    def __setstate__(self, state):
+        self.__init__(state['width'], state['height'])
 
     def set_key_color(self, color):
         return libtcod.console_set_key_color(self.console_id, color)
@@ -153,6 +161,12 @@ class Map:
         self.width = width
         self.height = height
         self.map = libtcod.map_new(width, height)
+
+    def __getstate__(self):
+        return {'width': self.width, 'height': self.height}
+
+    def __setstate__(self, state):
+        self.__init__(state['width'], state['height'])
 
     def set_properties(self, x, y, see_through, pass_through):
         return libtcod.map_set_properties(self.map, x, y, see_through, pass_through)
