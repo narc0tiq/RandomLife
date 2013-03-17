@@ -32,6 +32,46 @@ class Tile:
 
         map.console.set_char_background(x, y, color)
 
+def monster_death(monster):
+    panel.add_message(monster.name.capitalize() + ' has been slain!', tcod.COLOR_ORANGE)
+    monster.char = '%'
+    monster.color = const.COLOR_REMAINS
+    monster.blocks = False
+    monster.fighter = None
+    monster.ai = None
+    monster.name = 'remains of ' + monster.name
+    monster.map.entity_to_bottom(monster)
+
+def use_health_potion(potion, user):
+    if user.fighter.hp >= user.fighter.max_hp:
+        # HACK: assuming user is always the player:
+        panel.add_message('You are already as healthy as possible!', tcod.COLOR_RED)
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('Your wounds mend themselves before your very eyes.', tcod.COLOR_LIGHT_VIOLET)
+    user.fighter.heal(const.HEAL_AMOUNT)
+
+def cast_lightning(scroll, user):
+    target = user.map.find_nearest_shootable(user, const.LIGHTNING_RANGE)
+    if target is None:
+        panel.add_message('There are no monsters close enough to strike.', tcod.COLOR_RED)
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('As you finish reading the words, you hear a loud thunderclap as lightning strikes ' +
+                      target.name + '. It looks to have lost ' + str(const.LIGHTNING_DAMAGE) + ' HP.',
+                      tcod.COLOR_LIGHT_BLUE)
+    target.fighter.take_damage(const.LIGHTNING_DAMAGE)
+
+def cast_confuse(scroll, user):
+    target = user.map.find_nearest_shootable(user, const.CONFUSE_RANGE)
+    if target is None:
+        panel.add_message('There are no monsters close enough to strike.', tcod.COLOR_RED)
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('You notice ' + target.name + ' suddenly stumble. It doesn\'t seem to be paying attention to you anymore.',
+                      tcod.COLOR_LIGHT_GREEN)
+    target.ai = entities.ConfusedMonster(target.ai)
+    target.ai.owner = target
 
 class Room(utils.Rect):
     def __init__(self, map):
@@ -52,16 +92,6 @@ class Room(utils.Rect):
 
     def populate(self):
         monster_count = tcod.random.get_int(const.MAX_ROOM_MONSTERS)
-        def monster_death(monster):
-            panel.add_message(monster.name.capitalize() + ' has been slain!', tcod.COLOR_ORANGE)
-            monster.char = '%'
-            monster.color = const.COLOR_REMAINS
-            monster.blocks = False
-            monster.fighter = None
-            monster.ai = None
-            monster.name = 'remains of ' + monster.name
-            monster.map.entity_to_bottom(monster)
-
         for i in range(monster_count):
             x = tcod.random.get_int(self.x1+1, self.x2-1)
             y = tcod.random.get_int(self.y1+1, self.y2-1)
@@ -78,22 +108,22 @@ class Room(utils.Rect):
             if monster.can_pass(0, 0, self.map):
                 self.map.add_entity(monster)
 
-        def use_health_potion(potion, user):
-            if user.fighter.hp >= user.fighter.max_hp:
-                # HACK: assuming user is always the player:
-                panel.add_message('You are already as healthy as possible!', tcod.COLOR_RED)
-                return const.ITEM_USE_CANCELLED
-
-            panel.add_message('Your wounds mend themselves before your very eyes.', tcod.COLOR_LIGHT_VIOLET)
-            user.fighter.heal(const.HEAL_AMOUNT)
-
         item_count = tcod.random.get_int(const.MAX_ROOM_ITEMS)
         for i in range(item_count):
             x = tcod.random.get_int(self.x1+1, self.x2-1)
             y = tcod.random.get_int(self.y1+1, self.y2-1)
 
-            item_component = entities.Item(on_use=use_health_potion)
-            item = entities.EntityItem(x, y, '!', 'a healing potion', tcod.COLOR_VIOLET, item=item_component)
+            chance = tcod.random.get_int(100)
+            if chance < 70:
+                item_component = entities.Item(on_use=use_health_potion)
+                item = entities.EntityItem(x, y, '!', 'a healing potion', tcod.COLOR_VIOLET, item=item_component)
+            elif chance < 70+15:
+                item_component = entities.Item(on_use=cast_lightning)
+                item = entities.EntityItem(x, y, '#', 'a scroll of lightning bolt', tcod.COLOR_LIGHT_YELLOW, item=item_component)
+            else:
+                item_component = entities.Item(on_use=cast_confuse)
+                item = entities.EntityItem(x, y, '#', 'a scroll of confuse', tcod.COLOR_LIGHT_LIME, item=item_component)
+
             if item.can_pass(0, 0, self.map):
                 self.map.add_entity(item)
                 self.map.entity_to_bottom(item)
@@ -150,6 +180,19 @@ class Map:
                 found.append(e)
 
         return found
+
+    def find_nearest_shootable(self, entity, max_range):
+        nearest_target = None
+        nearest_dist = max_range + 1
+
+        for e in self.entities:
+            if e.fighter and not e == entity and self.is_visible(e.x, e.y):
+                dist = entity.distance_to(e)
+                if dist < nearest_dist:
+                    nearest_target = e
+                    nearest_dist = dist
+
+        return nearest_target
 
     def render(self):
         for x in range(len(self.tiles)):

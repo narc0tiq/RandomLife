@@ -148,6 +148,19 @@ class BasicMonster:
         elif map.player.fighter.hp > 0:
             self.owner.fighter.attack(map.player)
 
+class ConfusedMonster(BasicMonster):
+    def __init__(self, old_ai, duration=const.CONFUSE_DURATION):
+        self.old_ai = old_ai
+        self.duration = duration
+
+    def think(self):
+        if self.duration > 0:
+            self.owner.move(tcod.random.get_int(-1, 1), tcod.random.get_int(-1, 1))
+            self.duration -= 1
+        else:
+            self.owner.ai = self.old_ai
+            panel.add_message(self.owner.name.capitalize() + ' no longer seems confused.', tcod.COLOR_RED)
+
 class Item:
     def __init__(self, on_use=None):
         self.on_use = on_use
