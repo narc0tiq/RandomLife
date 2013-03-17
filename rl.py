@@ -69,13 +69,7 @@ def handle_events(player):
 
     return const.ACTION_NONE
 
-def void_main_of_silliness():
-    tcod.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-    tcod.init_root(const.SCREEN_WIDTH, const.SCREEN_HEIGHT, 'Random Life', False)
-    console = tcod.Console(const.MAP_WIDTH, const.MAP_HEIGHT)
-
-    libtcod.sys_set_fps(const.LIMIT_FPS)
-
+def new_game():
     map = dungeon.Map(console)
     map.generate()
     map.label_rooms()
@@ -115,8 +109,12 @@ def void_main_of_silliness():
         player.name = 'remains of ' + player.name
     player.fighter.on_death = player_death
 
-    panel.add_message("Have fun, and enjoy your death!", tcod.COLOR_RED)
+    panel.messages = []
 
+    return player
+
+def game_loop(player):
+    panel.add_message("Have fun, and enjoy your death!", tcod.COLOR_RED)
     while not tcod.is_window_closed():
         utils.render_all(player)
 
@@ -124,9 +122,33 @@ def void_main_of_silliness():
         if action == const.ACTION_EXIT:
             break
         elif action != const.ACTION_NONE:
-            for e in map.entities:
+            for e in player.map.entities:
                 if e.ai is not None:
                     e.ai.think()
 
-if(__name__ == "__main__"):
-    void_main_of_silliness()
+def main_menu():
+    img = tcod.ImageFile("menu_background1.png")
+    con = tcod.root_console
+
+    while not tcod.is_window_closed():
+        img.blit_2x(con)
+        con.set_default_foreground(tcod.COLOR_LIGHT_YELLOW)
+        con.print_ex(const.SCREEN_WIDTH/2, const.SCREEN_HEIGHT/2 - 4, align=tcod.ALIGN_CENTER,
+                     text="Random Life")
+        con.print_ex(const.SCREEN_WIDTH/2, const.SCREEN_HEIGHT-2, align=tcod.ALIGN_CENTER,
+                     text="A tutorial roguelike using libtcod")
+
+        key = utils.menu('', ['Start a new game', 'Resume last game', 'Quit'], width=24)
+
+        if key.c == ord('a'): # New game
+            game_loop(new_game())
+        elif key.c == ord('c') or key.c == ord('q'): # Quit
+            break;
+
+tcod.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+tcod.init_root(const.SCREEN_WIDTH, const.SCREEN_HEIGHT, 'Random Life', False)
+console = tcod.Console(const.MAP_WIDTH, const.MAP_HEIGHT)
+
+libtcod.sys_set_fps(const.LIMIT_FPS)
+
+main_menu()

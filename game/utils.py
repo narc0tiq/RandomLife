@@ -99,7 +99,9 @@ def menu(header, options, width):
     if len(options) > 26:
         raise ValueError('Cannot have a menu with more than 26 options!')
 
-    header_height = tcod.root_console.get_height_rect(width=width, text=header)
+    header_height = 0
+    if len(header) > 0:
+        header_height = tcod.root_console.get_height_rect(width=width, text=header)
     height = header_height + len(options)
 
     con = tcod.Console(width, height)

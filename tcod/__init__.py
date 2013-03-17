@@ -163,6 +163,28 @@ class Map:
     def is_in_fov(self, x, y):
         return libtcod.map_is_in_fov(self.map, x, y)
 
+class Image:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.image_id = libtcod.image_new(width, height)
+
+    def get_size(self):
+        return libtcod.image_get_size(self.image_id)
+
+    def blit_2x(self, console, dest_x=0, dest_y=0, x=0, y=0, width=None, height=None):
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
+
+        return libtcod.image_blit_2x(self.image_id, console.console_id, dest_x, dest_y, x, y, width, height)
+
+class ImageFile(Image):
+    def __init__(self, path):
+        self.image_id = libtcod.image_load(path)
+        self.width, self.height = self.get_size()
+
 # Useful constants
 BACKGROUND_NONE = libtcod.BKGND_NONE
 BACKGROUND_SET = libtcod.BKGND_SET
