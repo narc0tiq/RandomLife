@@ -1,43 +1,44 @@
 #!/usr/bin/env python
 
-from tcod import random, Console
+import tcod
 from tcod import libtcodpy as libtcod
 
 from game import const, dungeon, entities
+from game.utils import panel
 
 def handle_keys(player):
-    key, mouse = Console.wait_for_event(libtcod.EVENT_KEY_PRESS, flush=True)
+    key, mouse = tcod.wait_for_event(libtcod.EVENT_KEY_PRESS, flush=True)
 
     if(key.vk == libtcod.KEY_ENTER and key.lalt):
-        Console.set_fullscreen(not Console.is_fullscreen())
+        tcod.set_fullscreen(not tcod.is_fullscreen())
     elif((key.vk == libtcod.KEY_ESCAPE) or (key.c == ord('q'))):
         return const.ACTION_EXIT
     elif key.c == ord('N'):
         player.blocks = not player.blocks
-        print "Noclip set to ", not player.blocks
+        panel.add_message("Noclip set to " + str(not player.blocks), tcod.COLOR_LIGHT_FLAME)
     elif key.c == ord('X'):
         player.map.fullbright = not player.map.fullbright
 
     if player.fighter.hp > 0:
-        if(Console.is_key_pressed(libtcod.KEY_UP)):
+        if(tcod.is_key_pressed(libtcod.KEY_UP)):
             player.move(0, -1)
             return const.ACTION_MOVE
-        elif(Console.is_key_pressed(libtcod.KEY_DOWN)):
+        elif(tcod.is_key_pressed(libtcod.KEY_DOWN)):
             player.move(0, 1)
             return const.ACTION_MOVE
-        elif(Console.is_key_pressed(libtcod.KEY_LEFT)):
+        elif(tcod.is_key_pressed(libtcod.KEY_LEFT)):
             player.move(-1, 0)
             return const.ACTION_MOVE
-        elif(Console.is_key_pressed(libtcod.KEY_RIGHT)):
+        elif(tcod.is_key_pressed(libtcod.KEY_RIGHT)):
             player.move(1, 0)
             return const.ACTION_MOVE
 
     return const.ACTION_NONE
 
 def void_main_of_silliness():
-    Console.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-    Console.init_root(const.SCREEN_WIDTH, const.SCREEN_HEIGHT, 'Random Life', False)
-    console = Console(const.SCREEN_WIDTH, const.SCREEN_HEIGHT)
+    tcod.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+    tcod.init_root(const.SCREEN_WIDTH, const.SCREEN_HEIGHT, 'Random Life', False)
+    console = tcod.Console(const.MAP_WIDTH, const.MAP_HEIGHT)
 
     libtcod.sys_set_fps(const.LIMIT_FPS)
 
@@ -47,12 +48,14 @@ def void_main_of_silliness():
     map.populate_rooms()
 
     spawn = map.rooms[0].center()
-    player = entities.EntityLiving(spawn.x, spawn.y, '@', 'the adventurer', libtcod.white,
+    player = entities.EntityLiving(spawn.x, spawn.y, '@', 'the adventurer', tcod.COLOR_WHITE,
                                   fighter=entities.Fighter(hp=30, defense=2, power=5))
     map.add_entity(player)
     map.player = player
 
-    recalc_fov = lambda entity, unused_x, unused_y: map.fov_map.compute_fov(entity.x, entity.y)
+    def recalc_fov(player, x, y):
+        map.fov_map.compute_fov(player.x, player.y, const.FOV_RADIUS,
+                                const.FOV_LIGHT_WALLS, const.FOV_ALGORITHM)
     recalc_fov(player, 0, 0)
     player.on_move.append(recalc_fov)
 
@@ -67,22 +70,28 @@ def void_main_of_silliness():
         ents = map.entities_at(player.x, player.y)
         ents.remove(player)
         if len(ents) > 0:
-            print 'You see here:', ents
+            panel.add_message('You see here: ' + str(ents), tcod.COLOR_LIGHT_LIME)
     player.on_move.append(player_look)
 
     def player_death(player):
-        print 'You died. Press Esc or q to quit.'
+        panel.add_message('You died. Press Esc or q to quit.', tcod.COLOR_RED)
         player.char = '%'
         player.color = const.COLOR_REMAINS
     player.fighter.on_death = player_death
 
-    while not Console.is_window_closed():
+    panel.add_message("Have fun, and enjoy your death!", tcod.COLOR_RED)
+
+    while not tcod.is_window_closed():
         map.render()
-        console.set_default_foreground(const.COLOR_GUI_FOREGROUND)
-        console.print_ex(1, const.SCREEN_HEIGHT - 2, const.BACKGROUND_NONE, const.LEFT,
-                         'HP: ' + str(player.fighter.hp) + '/' + str(player.fighter.max_hp) + ' '*10)
+        panel.clear(const.PANEL_BACKGROUND)
+        panel.render_bar(1, 1, const.BAR_WIDTH, label='HP',
+                         value=player.fighter.hp, maximum=player.fighter.max_hp,
+                         bar_color=const.PANEL_BAR_COLOR, back_color=const.PANEL_BAR_BACK,
+                         text_color=const.PANEL_TEXT_COLOR)
+
         console.blit()
-        Console.flush()
+        panel.render(tcod.root_console)
+        tcod.flush()
         map.post_render()
 
         action = handle_keys(player)

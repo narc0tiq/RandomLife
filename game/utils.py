@@ -1,3 +1,11 @@
+from math import ceil
+import textwrap
+
+import tcod
+from tcod.libtcodpy import white as COLOR_WHITE, black as COLOR_BLACK
+
+from game import const
+
 class Point:
     def __init__(self, x=0, y=0):
         self.x = x
@@ -20,6 +28,59 @@ class Rect:
     def intersects(self, other):
         return (self.x1 <= other.x2 and self.x2 >= other.x1 and
                 self.y1 <= other.y2 and self.y2 >= other.y1)
+
+class GUIPanel:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.console = tcod.Console(width, height)
+        self.messages = []
+
+    def clear(self, color):
+        self.console.set_default_background(color)
+        self.console.clear()
+
+    def render_bar(self, x, y, width, label, value, maximum, bar_color, back_color, text_color=COLOR_WHITE):
+        bar_width = int(ceil(float(value * width) / maximum))
+
+        self.console.set_default_background(back_color)
+        self.console.rect(x, y, width, height=1, clear=True, effect=tcod.BACKGROUND_SCREEN)
+
+        self.console.set_default_background(bar_color)
+        if bar_width > 0:
+            self.console.rect(x, y, bar_width, height=1, effect=tcod.BACKGROUND_SCREEN)
+
+        self.console.set_default_foreground(text_color)
+        self.console.print_ex(x + (width / 2), y, tcod.BACKGROUND_NONE, tcod.ALIGN_CENTER,
+                              "%s: %d/%d" % (label, value, maximum))
+
+    def add_message(self, text, color=COLOR_WHITE):
+        lines = textwrap.wrap(text, const.MSG_WIDTH)
+
+        for line in lines:
+            if len(self.messages) >= const.MSG_HEIGHT:
+                del self.messages[0]
+
+            self.messages.append((line, color))
+
+    def render(self, dest_console, x=None, y=None):
+        message_y = 1
+        for line, color in self.messages:
+            self.console.set_default_foreground(color)
+            self.console.print_ex(const.PANEL_MSG_X, message_y, text=line)
+            message_y += 1
+
+        if x is None:
+            x = self.x
+        if y is None:
+            y = self.y
+
+        self.console.blit(0, 0, dest_console=dest_console, dest_x=x, dest_y=y)
+
+
+panel = GUIPanel(0, const.PANEL_Y, const.SCREEN_WIDTH, const.PANEL_HEIGHT)
 
 def label_generator(char):
     ret = ord(char)

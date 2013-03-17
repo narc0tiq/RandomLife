@@ -1,4 +1,5 @@
 import math
+from game.utils import panel
 
 class Entity:
     def __init__(self, x, y, char, name, color, blocks):
@@ -107,10 +108,12 @@ class Fighter:
         damage = self.power - target.fighter.defense
 
         if damage > 0:
-            print self.owner.name.capitalize(), 'attacks', target.name, 'doing', damage,'HP of damage.'
+            panel.add_message("%s attacks %s, doing %d damage!" % (
+                                self.owner.name.capitalize(), target.name, damage))
             target.fighter.take_damage(damage)
         else:
-            print self.owner.name.capitalize(), 'attacks', target.name, 'but the attack is ineffective!'
+            panel.add_message("%s attacks %s, but the attack is ineffective." % (
+                                self.owner.name.capitalize(), target.name))
 
 class BasicMonster:
     def think(self):

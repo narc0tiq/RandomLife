@@ -1,5 +1,6 @@
 import tcod
 from game import const, entities, utils
+from game.utils import panel
 
 class Tile:
     def __init__(self, pass_through, see_through = None):
@@ -52,7 +53,7 @@ class Room(utils.Rect):
     def populate(self):
         monster_count = tcod.random.get_int(const.MAX_ROOM_MONSTERS)
         def monster_death(monster):
-            print monster.name.capitalize(), 'has been slain!'
+            panel.add_message(monster.name.capitalize() + ' has been slain!', tcod.COLOR_ORANGE)
             monster.char = '%'
             monster.color = const.COLOR_REMAINS
             monster.blocks = False
