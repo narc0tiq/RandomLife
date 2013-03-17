@@ -2,7 +2,6 @@ from math import ceil
 import textwrap
 
 import tcod
-from tcod.libtcodpy import white as COLOR_WHITE, black as COLOR_BLACK
 
 from game import const
 
@@ -37,12 +36,13 @@ class GUIPanel:
         self.height = height
         self.console = tcod.Console(width, height)
         self.messages = []
+        self.status_message = ('', tcod.COLOR_BLACK)
 
     def clear(self, color):
         self.console.set_default_background(color)
         self.console.clear()
 
-    def render_bar(self, x, y, width, label, value, maximum, bar_color, back_color, text_color=COLOR_WHITE):
+    def render_bar(self, x, y, width, label, value, maximum, bar_color, back_color, text_color=tcod.COLOR_WHITE):
         bar_width = int(ceil(float(value * width) / maximum))
 
         self.console.set_default_background(back_color)
@@ -56,7 +56,7 @@ class GUIPanel:
         self.console.print_ex(x + (width / 2), y, tcod.BACKGROUND_NONE, tcod.ALIGN_CENTER,
                               "%s: %d/%d" % (label, value, maximum))
 
-    def add_message(self, text, color=COLOR_WHITE):
+    def add_message(self, text, color=tcod.COLOR_WHITE):
         lines = textwrap.wrap(text, const.MSG_WIDTH)
 
         for line in lines:
@@ -65,12 +65,19 @@ class GUIPanel:
 
             self.messages.append((line, color))
 
+    def status(self, text, color=tcod.COLOR_WHITE):
+        self.status_message = (text, color)
+
     def render(self, dest_console, x=None, y=None):
         message_y = 1
         for line, color in self.messages:
             self.console.set_default_foreground(color)
             self.console.print_ex(const.PANEL_MSG_X, message_y, text=line)
             message_y += 1
+
+        line, color = self.status_message
+        self.console.set_default_foreground(color)
+        self.console.print_ex(1, 0, tcod.BACKGROUND_NONE, tcod.ALIGN_LEFT, line)
 
         if x is None:
             x = self.x

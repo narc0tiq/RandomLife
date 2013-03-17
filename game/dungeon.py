@@ -120,7 +120,10 @@ class Map:
             self.entities.remove(entity)
             entity.clear(self.console)
 
-    def entities_at(self, x, y):
+    def entities_at(self, x, y, only_visible=False):
+        if only_visible and not self.is_visible(x, y):
+            return []
+
         found = []
         for e in self.entities:
             if e.x == x and e.y == y:
