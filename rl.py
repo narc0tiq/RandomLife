@@ -52,7 +52,9 @@ def handle_events(player):
                 if hasattr(e, 'item') and e.item is not None:
                     e.item.pick_up(player)
         elif key.c == ord('u'):
-            utils.use_menu(player)
+            item = utils.inventory_menu(player)
+            if item:
+                item.use(player)
 
     ents = player.map.entities_at(mouse.cx, mouse.cy, only_visible=True)
     if len(ents) > 0:

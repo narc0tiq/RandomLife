@@ -124,7 +124,7 @@ def menu(header, options, width):
     tcod.flush()
     return tcod.wait_for_keypress(flush=True)
 
-def use_menu(player):
+def inventory_menu(player):
     if len(player.inventory) == 0:
         panel.add_message('You can\'t use anything -- you don\'t have anything!', tcod.COLOR_RED)
         return
@@ -134,4 +134,4 @@ def use_menu(player):
 
     index = key.c - ord('a')
     if index >= 0 and index < len(options):
-        player.inventory[index].item.use(player)
+        return player.inventory[index].item
