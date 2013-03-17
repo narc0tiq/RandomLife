@@ -37,55 +37,52 @@ class Random:
 # A default Random for anyone to use
 random = Random(0)
 
+def set_custom_font(fontfile, flags=libtcod.FONT_LAYOUT_ASCII_INROW, horizontal_count=0, vertical_count=0):
+    return libtcod.console_set_custom_font(fontfile, flags, horizontal_count, vertical_count)
+
+def init_root(width, height, title, fullscreen=False, renderer=libtcod.RENDERER_SDL):
+    return libtcod.console_init_root(width, height, title, fullscreen, renderer)
+
+def wait_for_keypress(flush=False):
+    return libtcod.console_wait_for_keypress(flush)
+
+def wait_for_event(mask, flush=False):
+    key, mouse = (libtcod.Key(), libtcod.Mouse())
+    libtcod.sys_wait_for_event(mask, key, mouse, flush)
+    return (key, mouse)
+
+def set_fullscreen(want_fullscreen=True):
+    return libtcod.console_set_fullscreen(want_fullscreen)
+
+def is_fullscreen():
+    return libtcod.console_is_fullscreen()
+
+def is_key_pressed(key):
+    return libtcod.console_is_key_pressed(key)
+
+def is_window_closed():
+    return libtcod.console_is_window_closed()
+
+def flush():
+    return libtcod.console_flush()
+
 class Console:
-    @staticmethod
-    def set_custom_font(fontfile, flags=libtcod.FONT_LAYOUT_ASCII_INCOL, horizontal_count=0, vertical_count=0):
-        return libtcod.console_set_custom_font(fontfile, flags, horizontal_count, vertical_count)
-
-    @staticmethod
-    def init_root(width, height, title, fullscreen=False, renderer=libtcod.RENDERER_SDL):
-        return libtcod.console_init_root(width, height, title, fullscreen, renderer)
-
-    @staticmethod
-    def wait_for_keypress(flush=False):
-        return libtcod.console_wait_for_keypress(flush)
-
-    @staticmethod
-    def wait_for_event(mask, flush=False):
-        key, mouse = (libtcod.Key(), libtcod.Mouse())
-        libtcod.sys_wait_for_event(mask, key, mouse, flush)
-        return (key, mouse)
-
-    @staticmethod
-    def set_fullscreen(want_fullscreen=True):
-        return libtcod.console_set_fullscreen(want_fullscreen)
-
-    @staticmethod
-    def is_fullscreen():
-        return libtcod.console_is_fullscreen()
-
-    @staticmethod
-    def is_key_pressed(key):
-        return libtcod.console_is_key_pressed(key)
-
-    @staticmethod
-    def is_window_closed():
-        return libtcod.console_is_window_closed()
-
-    @staticmethod
-    def flush():
-        return libtcod.console_flush()
-
     # Root console has id 0
     ROOT_ID = 0
 
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.console_id = libtcod.console_new(width, height)
+    def __init__(self, width=0, height=0, console_id=None):
+        if console_id is None:
+            self.console_id = libtcod.console_new(width, height)
+            self.width = width
+            self.height = height
+        else:
+            self.console_id = console_id
+            self.width = libtcod.console_get_width(console_id)
+            self.height = libtcod.console_get_height(console_id)
 
     def __del__(self):
-        libtcod.console_delete(self.console_id)
+        if self.console_id > 0: # Root console cannot be console_delete()d
+            libtcod.console_delete(self.console_id)
 
     def set_key_color(self, color):
         return libtcod.console_set_key_color(self.console_id, color)
@@ -98,7 +95,7 @@ class Console:
         if src_height == 0:
             src_height = self.height
 
-        dest_id = Console.ROOT_ID
+        dest_id = self.ROOT_ID
         if dest_console is not None:
             dest_id = dest_console.console_id
 
@@ -123,6 +120,11 @@ class Console:
     def rect(self, x, y, width, height, clear=False, effect=libtcod.BKGND_SET):
         return libtcod.console_rect(self.console_id, x, y, width, height, clear, effect)
 
+    def clear(self):
+        return libtcod.console_clear(self.console_id)
+
+# The root console
+root_console = Console(console_id=Console.ROOT_ID)
 
 class Map:
     def __init__(self, width, height):
@@ -140,6 +142,7 @@ class Map:
     def is_in_fov(self, x, y):
         return libtcod.map_is_in_fov(self.map, x, y)
 
+# Useful constants
 BACKGROUND_NONE = libtcod.BKGND_NONE
 BACKGROUND_SET = libtcod.BKGND_SET
 BACKGROUND_MULTIPLY = libtcod.BKGND_MULTIPLY
