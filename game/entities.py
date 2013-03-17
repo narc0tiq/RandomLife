@@ -1,4 +1,7 @@
 import math
+
+import tcod
+from game import const
 from game.utils import panel
 
 class Entity:
@@ -15,9 +18,6 @@ class Entity:
         self.ai = None
 
     def can_pass(self, dx, dy, the_map=None):
-        if not self.blocks: # non-blocking entities can pass through anything
-            return True
-
         if the_map is None:
             the_map = self.map
 
@@ -25,8 +25,8 @@ class Entity:
         if not cell.pass_through:
             return False
 
-        for e in the_map.entities:
-            if e.blocks and e.x == self.x + dx and e.y == self.y + dy:
+        for e in the_map.entities_at(self.x + dx, self.y + dy):
+            if e.blocks:
                 return False
 
         return True
@@ -73,8 +73,15 @@ class Entity:
         return self.name
 
 class EntityItem(Entity):
-    def __init__(self, x, y, char, name, color):
+    def __init__(self, x, y, char, name, color, item=None):
         Entity.__init__(self, x, y, char, name, color, blocks=False)
+
+        self.item = item
+        if item is not None:
+            item.owner = self
+
+    def remove_from_map(self):
+        self.map.remove_entity(self)
 
 class EntityLiving(Entity):
     def __init__(self, x, y, char, name, color, fighter=None, ai=None):
@@ -86,6 +93,14 @@ class EntityLiving(Entity):
         self.ai = ai
         if ai is not None:
             ai.owner = self
+
+        self.inventory = []
+
+    def can_pass(self, dx, dy, the_map=None):
+        if not self.blocks: # non-blocking living entities can pass through anything
+            return True
+
+        return Entity.can_pass(self, dx, dy, the_map)
 
 class Fighter:
     def __init__(self, hp, defense, power, on_death=None):
@@ -115,6 +130,11 @@ class Fighter:
             panel.add_message("%s attacks %s, but the attack is ineffective." % (
                                 self.owner.name.capitalize(), target.name))
 
+    def heal(self, amount):
+        self.hp += amount
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+
 class BasicMonster:
     def think(self):
         map = self.owner.map
@@ -128,3 +148,23 @@ class BasicMonster:
         elif map.player.fighter.hp > 0:
             self.owner.fighter.attack(map.player)
 
+class Item:
+    def __init__(self, on_use=None):
+        self.on_use = on_use
+
+    def pick_up(self, taker):
+        if len(taker.inventory) >= 26:
+            # HACK: taker is basically always going to be the player, so...
+            panel.add_message('You cannot pick up ' + self.owner.name + ' because your inventory is full.', tcod.COLOR_RED)
+        else:
+            taker.inventory.append(self.owner)
+            self.owner.remove_from_map()
+            panel.add_message('You picked up ' + self.owner.name + '.', tcod.COLOR_GREEN)
+
+    def use(self, user):
+        if self.on_use is None:
+            panel.add_message(self.owner.name.capitalize() + ' is unusable!', tcod.COLOR_RED)
+        else:
+            result = self.on_use(self, user) or const.ITEM_USE_DESTROY
+            if result & const.ITEM_USE_DESTROY == const.ITEM_USE_DESTROY:
+                user.inventory.remove(self.owner)

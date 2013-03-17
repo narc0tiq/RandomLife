@@ -95,3 +95,43 @@ def label_generator(char):
         yield chr(ret)
         ret += 1
 
+def menu(header, options, width):
+    if len(options) > 26:
+        raise ValueError('Cannot have a menu with more than 26 options!')
+
+    header_height = tcod.root_console.get_height_rect(width=width, text=header)
+    height = header_height + len(options)
+
+    con = tcod.Console(width, height)
+    con.set_default_foreground(tcod.COLOR_WHITE)
+    con.print_rect_ex(text=header)
+
+    y = header_height
+    letter_index = ord('a')
+    for option_text in options:
+        text = '( ) ' + option_text
+        con.set_default_foreground(tcod.COLOR_WHITE)
+        con.print_ex(y=y, text=text)
+        con.set_default_foreground(tcod.COLOR_YELLOW)
+        con.put_char(1, y, chr(letter_index))
+        y += 1
+        letter_index += 1
+
+    x = const.SCREEN_WIDTH/2 - width/2
+    y = const.SCREEN_HEIGHT/2 - height/2
+    con.blit(dest_x=x, dest_y=y, alpha_bg=0.7)
+
+    tcod.flush()
+    return tcod.wait_for_keypress(flush=True)
+
+def use_menu(player):
+    if len(player.inventory) == 0:
+        panel.add_message('You can\'t use anything -- you don\'t have anything!', tcod.COLOR_RED)
+        return
+
+    options = [item.name for item in player.inventory]
+    key = menu('Use what (Esc to back out)?', options, const.INVENTORY_WIDTH)
+
+    index = key.c - ord('a')
+    if index >= 0 and index < len(options):
+        player.inventory[index].item.use(player)

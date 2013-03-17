@@ -3,15 +3,15 @@
 import tcod
 from tcod import libtcodpy as libtcod
 
-from game import const, dungeon, entities
-from game.utils import panel
+from game import const, dungeon, entities, utils
+panel = utils.panel
 
-def handle_events(player, map):
+def handle_events(player):
     key, mouse = tcod.check_for_event(libtcod.EVENT_KEY_PRESS|libtcod.EVENT_MOUSE)
 
-    if(key.vk == libtcod.KEY_ENTER and key.lalt):
+    if key.vk == libtcod.KEY_ENTER and key.lalt:
         tcod.set_fullscreen(not tcod.is_fullscreen())
-    elif((key.vk == libtcod.KEY_ESCAPE) or (key.c == ord('q'))):
+    elif key.vk == libtcod.KEY_ESCAPE or key.c == ord('q'):
         return const.ACTION_EXIT
     elif key.c == ord('N'):
         player.blocks = not player.blocks
@@ -47,8 +47,14 @@ def handle_events(player, map):
         elif key.vk == libtcod.KEY_KP5 or key.c == ord('.'):
             # Wait
             return const.ACTION_MOVE
+        elif key.c == ord('g'):
+            for e in player.map.entities_at(player.x, player.y):
+                if hasattr(e, 'item') and e.item is not None:
+                    e.item.pick_up(player)
+        elif key.c == ord('u'):
+            utils.use_menu(player)
 
-    ents = map.entities_at(mouse.cx, mouse.cy, only_visible=True)
+    ents = player.map.entities_at(mouse.cx, mouse.cy, only_visible=True)
     if len(ents) > 0:
         names = ', '.join([e.name for e in ents])
         panel.status(names.capitalize(), tcod.COLOR_LIGHT_GRAY)
@@ -97,7 +103,7 @@ def void_main_of_silliness():
     player.on_move.append(player_look)
 
     def player_death(player):
-        panel.add_message('You died. Press Esc or q to quit.', tcod.COLOR_RED)
+        panel.add_message('You have died. Press Esc or q to quit.', tcod.COLOR_RED)
         player.char = '%'
         player.color = const.COLOR_REMAINS
         player.name = 'remains of ' + player.name
@@ -118,7 +124,7 @@ def void_main_of_silliness():
         tcod.flush()
         map.post_render()
 
-        action = handle_events(player, map)
+        action = handle_events(player)
         if action == const.ACTION_EXIT:
             break
         elif action != const.ACTION_NONE:

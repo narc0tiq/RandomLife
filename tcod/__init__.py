@@ -92,12 +92,12 @@ class Console:
     def set_key_color(self, color):
         return libtcod.console_set_key_color(self.console_id, color)
 
-    def blit(self, src_x=0, src_y=0, src_width=0, src_height=0,
+    def blit(self, src_x=0, src_y=0, src_width=None, src_height=None,
              dest_console=None, dest_x=0, dest_y=0,
              alpha_fg=1.0, alpha_bg=1.0):
-        if src_width == 0:
+        if src_width is None:
             src_width = self.width
-        if src_height == 0:
+        if src_height is None:
             src_height = self.height
 
         dest_id = self.ROOT_ID
@@ -116,10 +116,10 @@ class Console:
     def set_char_background(self, x, y, color, flags=libtcod.BKGND_SET):
         return libtcod.console_set_char_background(self.console_id, x, y, color, flags)
 
-    def put_char(self, x, y, char, flags=libtcod.BKGND_NONE):
+    def put_char(self, x=0, y=0, char=' ', flags=libtcod.BKGND_NONE):
         return libtcod.console_put_char(self.console_id, x, y, char, flags)
 
-    def print_ex(self, x, y, flags=libtcod.BKGND_NONE, align=libtcod.LEFT, text="DEFAULT_TEXT"):
+    def print_ex(self, x=0, y=0, flags=libtcod.BKGND_NONE, align=libtcod.LEFT, text="DEFAULT_TEXT"):
         return libtcod.console_print_ex(self.console_id, x, y, flags, align, text)
 
     def rect(self, x, y, width, height, clear=False, effect=libtcod.BKGND_SET):
@@ -127,6 +127,23 @@ class Console:
 
     def clear(self):
         return libtcod.console_clear(self.console_id)
+
+    def get_height_rect(self, x=0, y=0, width=None, height=None, text=''):
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
+
+        return libtcod.console_get_height_rect(self.console_id, x, y, width, height, text)
+
+    def print_rect_ex(self, x=0, y=0, width=None, height=None, effect=libtcod.BKGND_NONE,
+                      align=libtcod.LEFT, text=''):
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
+
+        return libtcod.console_print_rect_ex(self.console_id, x, y, width, height, effect, align, text)
 
 # The root console
 root_console = Console(console_id=Console.ROOT_ID)

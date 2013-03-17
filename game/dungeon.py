@@ -63,8 +63,8 @@ class Room(utils.Rect):
             monster.map.entity_to_bottom(monster)
 
         for i in range(monster_count):
-            x = tcod.random.get_int(self.x1, self.x2-1)
-            y = tcod.random.get_int(self.y1, self.y2-1)
+            x = tcod.random.get_int(self.x1+1, self.x2-1)
+            y = tcod.random.get_int(self.y1+1, self.y2-1)
 
             if tcod.random.get_int(20) < 16:
                 fighter = entities.Fighter(hp=10, defense=0, power=3, on_death=monster_death)
@@ -77,6 +77,26 @@ class Room(utils.Rect):
 
             if monster.can_pass(0, 0, self.map):
                 self.map.add_entity(monster)
+
+        def use_health_potion(potion, user):
+            if user.fighter.hp >= user.fighter.max_hp:
+                # HACK: assuming user is always the player:
+                panel.add_message('You are already as healthy as possible!', tcod.COLOR_RED)
+                return const.ITEM_USE_CANCELLED
+
+            panel.add_message('Your wounds mend themselves before your very eyes.', tcod.COLOR_LIGHT_VIOLET)
+            user.fighter.heal(const.HEAL_AMOUNT)
+
+        item_count = tcod.random.get_int(const.MAX_ROOM_ITEMS)
+        for i in range(item_count):
+            x = tcod.random.get_int(self.x1+1, self.x2-1)
+            y = tcod.random.get_int(self.y1+1, self.y2-1)
+
+            item_component = entities.Item(on_use=use_health_potion)
+            item = entities.EntityItem(x, y, '!', 'a healing potion', tcod.COLOR_VIOLET, item=item_component)
+            if item.can_pass(0, 0, self.map):
+                self.map.add_entity(item)
+                self.map.entity_to_bottom(item)
 
     def carve(self):
         for x in range(self.x1 + 1, self.x2 - 1):
