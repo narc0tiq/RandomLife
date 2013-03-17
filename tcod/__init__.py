@@ -48,11 +48,11 @@ def wait_for_keypress(flush=False):
     return libtcod.console_wait_for_keypress(flush)
 
 key, mouse = (libtcod.Key(), libtcod.Mouse())
-def wait_for_event(mask, flush=False):
+def wait_for_event(mask=libtcod.EVENT_KEY_PRESS|libtcod.EVENT_MOUSE, flush=False):
     libtcod.sys_wait_for_event(mask, key, mouse, flush)
     return (key, mouse)
 
-def check_for_event(mask):
+def check_for_event(mask=libtcod.EVENT_KEY_PRESS|libtcod.EVENT_MOUSE):
     libtcod.sys_check_for_event(mask, key, mouse)
     return (key, mouse)
 
@@ -182,6 +182,15 @@ BACKGROUND_DEFAULT = libtcod.BKGND_DEFAULT
 ALIGN_LEFT = libtcod.LEFT
 ALIGN_RIGHT = libtcod.RIGHT
 ALIGN_CENTER = libtcod.CENTER
+
+EVENT_KEY_PRESS = libtcod.EVENT_KEY_PRESS
+EVENT_KEY_RELEASE = libtcod.EVENT_KEY_RELEASE
+EVENT_KEY = libtcod.EVENT_KEY
+EVENT_MOUSE_MOVE = libtcod.EVENT_MOUSE_MOVE
+EVENT_MOUSE_PRESS = libtcod.EVENT_MOUSE_PRESS
+EVENT_MOUSE_RELEASE = libtcod.EVENT_MOUSE_RELEASE
+EVENT_MOUSE = libtcod.EVENT_MOUSE
+EVENT_ANY = libtcod.EVENT_ANY
 
 COLOR_BLACK = libtcod.black
 COLOR_DARKEST_GREY = libtcod.darkest_grey
@@ -391,3 +400,70 @@ COLOR_SILVER = libtcod.silver
 
 COLOR_CELADON = libtcod.celadon
 COLOR_PEACH = libtcod.peach
+
+KEY_NONE = libtcod.KEY_NONE
+KEY_ESCAPE = libtcod.KEY_ESCAPE
+KEY_BACKSPACE = libtcod.KEY_BACKSPACE
+KEY_TAB = libtcod.KEY_TAB
+KEY_ENTER = libtcod.KEY_ENTER
+KEY_SHIFT = libtcod.KEY_SHIFT
+KEY_CONTROL = libtcod.KEY_CONTROL
+KEY_ALT = libtcod.KEY_ALT
+KEY_PAUSE = libtcod.KEY_PAUSE
+KEY_CAPSLOCK = libtcod.KEY_CAPSLOCK
+KEY_PAGEUP = libtcod.KEY_PAGEUP
+KEY_PAGEDOWN = libtcod.KEY_PAGEDOWN
+KEY_END = libtcod.KEY_END
+KEY_HOME = libtcod.KEY_HOME
+KEY_UP = libtcod.KEY_UP
+KEY_LEFT = libtcod.KEY_LEFT
+KEY_RIGHT = libtcod.KEY_RIGHT
+KEY_DOWN = libtcod.KEY_DOWN
+KEY_PRINTSCREEN = libtcod.KEY_PRINTSCREEN
+KEY_INSERT = libtcod.KEY_INSERT
+KEY_DELETE = libtcod.KEY_DELETE
+KEY_LWIN = libtcod.KEY_LWIN
+KEY_RWIN = libtcod.KEY_RWIN
+KEY_APPS = libtcod.KEY_APPS
+KEY_0 = libtcod.KEY_0
+KEY_1 = libtcod.KEY_1
+KEY_2 = libtcod.KEY_2
+KEY_3 = libtcod.KEY_3
+KEY_4 = libtcod.KEY_4
+KEY_5 = libtcod.KEY_5
+KEY_6 = libtcod.KEY_6
+KEY_7 = libtcod.KEY_7
+KEY_8 = libtcod.KEY_8
+KEY_9 = libtcod.KEY_9
+KEY_KP0 = libtcod.KEY_KP0
+KEY_KP1 = libtcod.KEY_KP1
+KEY_KP2 = libtcod.KEY_KP2
+KEY_KP3 = libtcod.KEY_KP3
+KEY_KP4 = libtcod.KEY_KP4
+KEY_KP5 = libtcod.KEY_KP5
+KEY_KP6 = libtcod.KEY_KP6
+KEY_KP7 = libtcod.KEY_KP7
+KEY_KP8 = libtcod.KEY_KP8
+KEY_KP9 = libtcod.KEY_KP9
+KEY_KPADD = libtcod.KEY_KPADD
+KEY_KPSUB = libtcod.KEY_KPSUB
+KEY_KPDIV = libtcod.KEY_KPDIV
+KEY_KPMUL = libtcod.KEY_KPMUL
+KEY_KPDEC = libtcod.KEY_KPDEC
+KEY_KPENTER = libtcod.KEY_KPENTER
+KEY_F1 = libtcod.KEY_F1
+KEY_F2 = libtcod.KEY_F2
+KEY_F3 = libtcod.KEY_F3
+KEY_F4 = libtcod.KEY_F4
+KEY_F5 = libtcod.KEY_F5
+KEY_F6 = libtcod.KEY_F6
+KEY_F7 = libtcod.KEY_F7
+KEY_F8 = libtcod.KEY_F8
+KEY_F9 = libtcod.KEY_F9
+KEY_F10 = libtcod.KEY_F10
+KEY_F11 = libtcod.KEY_F11
+KEY_F12 = libtcod.KEY_F12
+KEY_NUMLOCK = libtcod.KEY_NUMLOCK
+KEY_SCROLLLOCK = libtcod.KEY_SCROLLLOCK
+KEY_SPACE = libtcod.KEY_SPACE
+KEY_CHAR = libtcod.KEY_CHAR
