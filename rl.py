@@ -173,7 +173,7 @@ def main_menu():
         elif key.c == ord('c') or key.c == ord('q'): # Quit
             break;
 
-tcod.set_custom_font('fonts/dejavu12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+tcod.set_custom_font('fonts/consolas12x12_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 tcod.init_root(const.SCREEN_WIDTH, const.SCREEN_HEIGHT, 'Random Life', False)
 console = tcod.Console(const.MAP_WIDTH, const.MAP_HEIGHT)
 
