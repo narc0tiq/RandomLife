@@ -62,6 +62,11 @@ def handle_events(player):
             item = utils.inventory_menu(player)
             if item:
                 item.drop(player)
+        elif key.c == ord('<') or key.c == ord('>'):
+            if player.map.stairs.x == player.x and player.map.stairs.y == player.y:
+                return const.ACTION_DESCEND_STAIRS
+        elif key.c == ord('c'):
+            utils.character_sheet(player)
 
     ents = player.map.entities_at(mouse.cx, mouse.cy, only_visible=True)
     if len(ents) > 0:
@@ -71,6 +76,24 @@ def handle_events(player):
         panel.status('')
 
     return const.ACTION_NONE
+
+def level_up_screen(player):
+    choice = None
+    while choice is None:
+        choice = utils.menu('Level up! Choose a stat to raise:\n',
+                      ['Constitution (+20 HP, from ' + str(player.fighter.max_hp) + ')',
+                       'Strength (+1 attack, from ' + str(player.fighter.power) + ')',
+                       'Agility (+1 defense, from ' + str(player.fighter.defense) + ')'], 40)
+
+        if choice.c == ord('a'): # more hp
+            player.fighter.max_hp += 20
+            player.fighter.hp += 20
+        elif choice.c == ord('b'): # more power!
+            player.fighter.power += 1
+        elif choice.c == ord('c'):
+            player.fighter.defense += 1
+        else:
+            choice = None # Try again
 
 def recalc_fov(player, x, y):
     player.map.fov_map.compute_fov(player.x, player.y, const.FOV_RADIUS,
@@ -89,12 +112,26 @@ def player_look(player, x, y):
         names = ', '.join([e.name for e in ents])
         panel.add_message('You see here: ' + names, tcod.COLOR_LIGHT_LIME)
 
-def player_death(player):
+def player_death(player, killer):
     panel.add_message('You have died. Press Esc or q to quit.', tcod.COLOR_RED)
     player.char = '%'
     player.color = const.COLOR_REMAINS
     player.name = 'remains of ' + player.name
     player.map.fullbright = True
+
+def player_kill(fighter, killed):
+    player = fighter.owner
+    if killed.fighter:
+        fighter.xp += killed.fighter.xp
+        panel.add_message('Gained %d XP.' % killed.fighter.xp, tcod.COLOR_ORANGE)
+
+    if fighter.xp >= utils.xp_to_level_up(player.level):
+        fighter.xp -= utils.xp_to_level_up(player.level)
+        player.level += 1
+        fighter.hp = fighter.max_hp
+        panel.add_message('Your experience pushes you to a new plateau of battle skills. You are now level %d.' % player.level,
+                          tcod.COLOR_YELLOW)
+        level_up_screen(player)
 
 def new_game():
     map = dungeon.Map(console)
@@ -104,7 +141,9 @@ def new_game():
 
     spawn = map.rooms[0].center()
     player = entities.EntityLiving(spawn.x, spawn.y, '@', 'the adventurer', tcod.COLOR_WHITE,
-                                  fighter=entities.Fighter(hp=30, defense=2, power=5))
+                                   fighter=entities.Fighter(hp=30, defense=2, power=5,
+                                                            on_death=player_death,
+                                                            on_kill=player_kill))
     map.add_entity(player)
     map.player = player
 
@@ -112,11 +151,28 @@ def new_game():
     player.on_move.append(recalc_fov)
     player.on_move.append(player_attack)
     player.on_move.append(player_look)
-    player.fighter.on_death = player_death
 
     panel.messages = []
     panel.add_message("Have fun, and enjoy your death!", tcod.COLOR_RED)
     return player
+
+def next_level(player):
+    panel.add_message("You take a moment to rest and recover your strength.", tcod.COLOR_LIGHT_VIOLET)
+    player.fighter.heal(player.fighter.max_hp/2)
+
+    panel.add_message('After a rare moment of peace, you descend further into the depths of the dungeon.', tcod.COLOR_RED)
+    new_map = dungeon.Map(player.map.console, level=player.map.level+1)
+    new_map.generate()
+    new_map.populate_rooms()
+
+    spawn = new_map.rooms[0].center()
+    player.x = spawn.x
+    player.y = spawn.y
+
+    new_map.add_entity(player)
+    new_map.player = player
+
+    recalc_fov(player, 0, 0)
 
 def save_game(map):
     s = shelve.open('savegame', 'n')
@@ -142,6 +198,8 @@ def game_loop(player):
         if action == const.ACTION_EXIT:
             save_game(player.map)
             break
+        elif action == const.ACTION_DESCEND_STAIRS:
+            next_level(player)
         elif action != const.ACTION_NONE:
             for e in player.map.entities:
                 if e.ai is not None:

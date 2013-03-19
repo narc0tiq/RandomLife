@@ -32,7 +32,7 @@ class Tile:
 
         map.console.set_char_background(x, y, color)
 
-def monster_death(monster):
+def monster_death(monster, killer):
     panel.add_message(monster.name.capitalize() + ' has been slain!', tcod.COLOR_ORANGE)
     monster.char = '%'
     monster.color = const.COLOR_REMAINS
@@ -120,11 +120,11 @@ class Room(utils.Rect):
             y = tcod.random.get_int(self.y1+1, self.y2-1)
 
             if tcod.random.get_int(20) < 16:
-                fighter = entities.Fighter(hp=10, defense=0, power=3, on_death=monster_death)
+                fighter = entities.Fighter(hp=10, defense=0, power=3, xp=35, on_death=monster_death)
                 ai = entities.BasicMonster()
                 monster = entities.EntityLiving(x, y, 'o', 'an orc', const.COLOR_ORC, fighter=fighter, ai=ai)
             else:
-                fighter = entities.Fighter(hp=14, defense=1, power=4, on_death=monster_death)
+                fighter = entities.Fighter(hp=14, defense=1, power=4, xp=100, on_death=monster_death)
                 ai = entities.BasicMonster()
                 monster = entities.EntityLiving(x, y, 'T', 'a great troll', const.COLOR_TROLL, fighter=fighter, ai=ai)
 
@@ -165,8 +165,8 @@ class Room(utils.Rect):
 
 
 class Map:
-    def __init__(self, console):
-        self.tiles = [[ Tile(False) for y in range(console.height)] for x in range(console.width)]
+    def __init__(self, console, level=1):
+        self.tiles = [[Tile(False) for y in range(console.height)] for x in range(console.width)]
         self.rooms = []
         self.entities = []
         self.console = console
@@ -175,6 +175,8 @@ class Map:
         self.height = console.height
         self.fullbright = False
         self.player = None
+        self.level = level
+        self.stairs = None
 
     def is_visible(self, x, y):
         if self.fullbright:
@@ -182,8 +184,15 @@ class Map:
         else:
             return self.fov_map.is_in_fov(x, y)
 
+    def is_explored(self, x, y):
+        return self.tiles[x][y].explored
+
     def add_entity(self, entity):
         self.entities.append(entity)
+        entity.map = self
+
+    def add_entity_to_bottom(self, entity):
+        self.entities.insert(0, entity)
         entity.map = self
 
     def entity_to_bottom(self, entity):
@@ -291,10 +300,17 @@ class Map:
         for i in range(1, len(self.rooms)):
             self.rooms[i].populate()
 
+        # Last room gets the stairs
+        last_room = self.rooms[len(self.rooms) - 1]
+        center = last_room.center()
+        stairs = entities.Entity(center.x, center.y, '<', 'a staircase leading down', tcod.COLOR_WHITE, always_visible=True)
+        self.add_entity_to_bottom(stairs)
+        self.stairs = stairs
+
     def label_rooms(self):
         labels = utils.label_generator('A')
         for r in self.rooms:
             center = r.center()
-            label = entities.EntityItem(center.x, center.y, labels.next(), 'a room label', const.COLOR_LABEL)
+            label = entities.Entity(center.x, center.y, labels.next(), 'a room label', const.COLOR_LABEL, always_visible=True)
             self.add_entity(label)
 

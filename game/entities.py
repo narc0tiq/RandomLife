@@ -5,7 +5,7 @@ from game import const
 from game.utils import panel
 
 class Entity:
-    def __init__(self, x, y, char, name, color, blocks):
+    def __init__(self, x, y, char, name, color, level=1, blocks=False, always_visible=False):
         self.map = None
         self.x = x
         self.y = y
@@ -13,7 +13,9 @@ class Entity:
         self.name = name
         self.color = color
         self.on_move = []
+        self.level = level
         self.blocks = blocks
+        self.always_visible = always_visible
         self.fighter = None
         self.ai = None
 
@@ -61,7 +63,8 @@ class Entity:
 
     def draw(self, console):
         """ Draw self to the passed-in console """
-        if self.map.is_visible(self.x, self.y):
+        if((self.always_visible and self.map.is_explored(self.x, self.y)) or
+           self.map.is_visible(self.x, self.y)):
             console.set_default_foreground(self.color)
             console.put_char(self.x, self.y, self.char)
 
@@ -71,7 +74,7 @@ class Entity:
 
 class EntityItem(Entity):
     def __init__(self, x, y, char, name, color, item=None):
-        Entity.__init__(self, x, y, char, name, color, blocks=False)
+        Entity.__init__(self, x, y, char, name, color, always_visible=True)
 
         self.item = item
         if item is not None:
@@ -101,18 +104,23 @@ class EntityLiving(Entity):
         return Entity.can_pass(self, dx, dy, the_map)
 
 class Fighter:
-    def __init__(self, hp, defense, power, on_death=None):
+    def __init__(self, hp, defense, power, xp=0, on_death=None, on_kill=None):
         self.max_hp = self.hp = hp
         self.defense = defense
         self.power = power
+        self.xp = xp
         self.on_death = on_death
+        self.on_kill = on_kill
 
-    def take_damage(self, damage):
+    def take_damage(self, damage, damage_source=None):
         if damage > 0:
             self.hp -= damage
 
         if self.hp <= 0 and self.on_death is not None:
-            self.on_death(self.owner)
+            if(damage_source is not None and hasattr(damage_source, 'on_kill') and
+               damage_source.on_kill is not None):
+                damage_source.on_kill(damage_source, self.owner)
+            self.on_death(self.owner, damage_source)
 
     def attack(self, target):
         if target.fighter is None:
@@ -123,7 +131,7 @@ class Fighter:
         if damage > 0:
             panel.add_message("%s attacks %s, doing %d damage!" % (
                                 self.owner.name.capitalize(), target.name, damage))
-            target.fighter.take_damage(damage)
+            target.fighter.take_damage(damage, self)
         else:
             panel.add_message("%s attacks %s, but the attack is ineffective." % (
                                 self.owner.name.capitalize(), target.name))

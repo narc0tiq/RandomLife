@@ -83,7 +83,6 @@ class GUIPanel:
             x = self.x
         if y is None:
             y = self.y
-
         self.console.blit(0, 0, dest_console=dest_console, dest_x=x, dest_y=y)
 
 
@@ -94,6 +93,9 @@ def label_generator(char):
     while True:
         yield chr(ret)
         ret += 1
+
+def xp_to_level_up(level=1):
+    return const.LEVEL_UP_BASE + (level * const.LEVEL_UP_INCREMENT)
 
 def menu(header, options, width):
     if len(options) > 26:
@@ -142,13 +144,23 @@ def inventory_menu(player):
 def msgbox(text, width=50):
     menu("\n\n%s\n\n"%text, [], width)
 
+def msgbox_ml(lines, width=50):
+    msgbox('\n'.join(lines), width)
+
 def render_all(player):
     player.map.render()
     panel.clear(const.PANEL_BACKGROUND)
     panel.render_bar(1, 1, const.BAR_WIDTH, label='HP',
                      value=player.fighter.hp, maximum=player.fighter.max_hp,
-                     bar_color=const.PANEL_BAR_COLOR, back_color=const.PANEL_BAR_BACK,
+                     bar_color=const.PANEL_HPBAR_COLOR, back_color=const.PANEL_HPBAR_BACK,
                      text_color=const.PANEL_TEXT_COLOR)
+    panel.render_bar(1, 2, const.BAR_WIDTH, label='XP',
+                     value=player.fighter.xp, maximum=xp_to_level_up(player.level),
+                     bar_color=const.PANEL_XPBAR_COLOR, back_color=const.PANEL_XPBAR_BACK,
+                     text_color=const.PANEL_TEXT_COLOR)
+
+    panel.console.set_default_foreground(tcod.COLOR_YELLOW)
+    panel.console.print_ex(x=1, y=6, text='Dungeon(%d)' % player.map.level)
 
     player.map.console.blit()
     panel.render(tcod.root_console)
@@ -178,3 +190,11 @@ def target_monster(player, max_range=None):
         for e in player.map.targets_at(x, y, only_visible=True):
             if e != player:
                 return e
+
+def character_sheet(player):
+    msgbox_ml(['Character information', '',
+               'Level: %d' % player.level,
+               'Experience: %d (%d to level up)' % (player.fighter.xp, xp_to_level_up(player.level)),
+               'Constitution (max HP): %d' % player.fighter.max_hp,
+               'Strength (attack): %d' % player.fighter.power,
+               'Agility (defense): %d' % player.fighter.defense], 40)
