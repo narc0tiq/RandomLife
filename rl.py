@@ -141,7 +141,7 @@ def new_game():
 
     spawn = map.rooms[0].center()
     player = entities.EntityLiving(spawn.x, spawn.y, '@', 'the adventurer', tcod.COLOR_WHITE,
-                                   fighter=entities.Fighter(hp=30, defense=2, power=5,
+                                   fighter=entities.Fighter(hp=100, defense=1, power=4,
                                                             on_death=player_death,
                                                             on_kill=player_kill))
     map.add_entity(player)

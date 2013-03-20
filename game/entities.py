@@ -1,8 +1,8 @@
 import math
 
 import tcod
-from game import const
-from game.utils import panel
+from game import const, utils
+panel = utils.panel
 
 class Entity:
     def __init__(self, x, y, char, name, color, level=1, blocks=False, always_visible=False):
@@ -195,3 +195,94 @@ class Item:
             result = self.on_use(self, user) or const.ITEM_USE_DESTROY
             if result & const.ITEM_USE_DESTROY == const.ITEM_USE_DESTROY:
                 user.inventory.remove(self.owner)
+
+def monster_death(monster, killer):
+    panel.add_message(monster.name.capitalize() + ' has been slain!', tcod.COLOR_ORANGE)
+    monster.char = '%'
+    monster.color = const.COLOR_REMAINS
+    monster.blocks = False
+    monster.fighter = None
+    monster.ai = None
+    monster.name = 'remains of ' + monster.name
+    monster.map.entity_to_bottom(monster)
+
+def use_health_potion(potion, user):
+    if user.fighter.hp >= user.fighter.max_hp:
+        # HACK: assuming user is always the player:
+        panel.add_message('You are already as healthy as possible!', tcod.COLOR_RED)
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('Your wounds mend themselves before your very eyes.', tcod.COLOR_LIGHT_VIOLET)
+    user.fighter.heal(const.HEAL_AMOUNT)
+
+def cast_lightning(scroll, user):
+    target = user.map.find_nearest_shootable(user, const.LIGHTNING_RANGE)
+    if target is None:
+        panel.add_message('There are no monsters close enough to strike.', tcod.COLOR_RED)
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('As you finish reading the words, you hear a loud thunderclap as lightning strikes ' +
+                      target.name + '. It looks to have lost ' + str(const.LIGHTNING_DAMAGE) + ' HP.',
+                      tcod.COLOR_LIGHT_BLUE)
+    target.fighter.take_damage(const.LIGHTNING_DAMAGE)
+
+def cast_confuse(scroll, user):
+    panel.add_message('Left-click a monster to confuse, or right-click to cancel.', tcod.COLOR_LIGHT_CYAN)
+    target = utils.target_monster(user, const.CONFUSE_RANGE)
+    if target is None:
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('You notice ' + target.name + ' suddenly stumble. It doesn\'t seem to be paying attention to you anymore.',
+                      tcod.COLOR_LIGHT_GREEN)
+    target.ai = ConfusedMonster(target.ai)
+    target.ai.owner = target
+
+def cast_fireball(scroll, user):
+    panel.add_message('Left-click a target tile for the fireball, or right-click to cancel.', tcod.COLOR_LIGHT_CYAN)
+    x, y = utils.target_tile(user)
+    if x is None:
+        return const.ITEM_USE_CANCELLED
+
+    panel.add_message('A ball of fire appears in front of your pointing finger as you finish reading the scroll, ' +
+                      'and flies to the indicated location before exploding.', tcod.COLOR_FLAME)
+
+    targets = user.map.targets_near(x, y, const.FIREBALL_RADIUS)
+    if len(targets) == 0: # No targets? Tough luck.
+        return const.ITEM_USE_DESTROY
+
+    targets_string = ', '.join([t.name for t in targets]).capitalize()
+    if len(targets) == 1:
+        targets_string += ' is'
+    else:
+        targets_string += ' are all'
+    panel.add_message(targets_string + ' burned for ' + str(const.FIREBALL_DAMAGE) + ' HP.', tcod.COLOR_ORANGE)
+
+    for t in targets:
+        t.fighter.take_damage(const.FIREBALL_DAMAGE)
+
+def make_orc(x, y):
+    fighter = Fighter(hp=20, defense=0, power=4, xp=35, on_death=monster_death)
+    ai = BasicMonster()
+    return EntityLiving(x, y, 'o', 'an orc', const.COLOR_ORC, fighter=fighter, ai=ai)
+
+def make_troll(x, y):
+    fighter = Fighter(hp=30, defense=2, power=8, xp=100, on_death=monster_death)
+    ai = BasicMonster()
+    return EntityLiving(x, y, 'T', 'a great troll', const.COLOR_TROLL, fighter=fighter, ai=ai)
+
+def make_health_potion(x, y):
+    item_component = Item(on_use=use_health_potion)
+    return EntityItem(x, y, '!', 'a healing potion', tcod.COLOR_VIOLET, item=item_component)
+
+def make_lightning_scroll(x, y):
+    item_component = Item(on_use=cast_lightning)
+    return EntityItem(x, y, '#', 'a scroll of lightning bolt', tcod.COLOR_LIGHT_YELLOW, item=item_component)
+
+def make_confuse_scroll(x, y):
+    item_component = Item(on_use=cast_confuse)
+    return EntityItem(x, y, '#', 'a scroll of confuse', tcod.COLOR_LIGHT_LIME, item=item_component)
+
+def make_fireball_scroll(x, y):
+    item_component = Item(on_use=cast_fireball)
+    return EntityItem(x, y, '#', 'a scroll of fireball', tcod.COLOR_FLAME, item=item_component)
+

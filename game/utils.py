@@ -198,3 +198,46 @@ def character_sheet(player):
                'Constitution (max HP): %d' % player.fighter.max_hp,
                'Strength (attack): %d' % player.fighter.power,
                'Agility (defense): %d' % player.fighter.defense], 40)
+
+def random_choice_index(options):
+    max_roll = sum(options)
+    if(max_roll <= 0):
+        raise ValueError('Trying to pick between %d options!' % max_roll)
+
+    die_roll = tcod.random.get_int(sum(options))
+
+    for i in range(len(options)):
+        if options[i] == 0:
+            continue # Chance of 0 means it won't happen!
+
+        if die_roll <= options[i]:
+            return i
+        else:
+            die_roll -= options[i]
+
+def random_choice(options_dict):
+    """
+    An options_dict looks like this {option1: 10, option2: 15}, where the keys
+    are the options, and the values are their chance of occurring.
+    In the example above, option1 has a 10/25 chance and option2 has a 15/25
+    chance.
+    """
+
+    options = options_dict.keys()
+    return options[random_choice_index(options_dict.values())]
+
+def from_level(levels_dict, level=1):
+    """
+    A levels_dict looks like {1: 10, 4: 12}, where the keys are the level, and
+    the values are the value to be returned for that level or those above
+    (unless a higher-level value exists).
+    In the example above, for level 1-3 the returned value would be 10, and for
+    levels 4 and above the returned value would be 12.
+    """
+
+    for l in reversed(levels_dict.keys()):
+        if l <= level:
+            return levels_dict[l]
+
+    return 0
+
